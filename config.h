@@ -1,8 +1,4 @@
-/*
-  Set any config.h overrides for your specific keymap here.
-  See config.h options at https://docs.qmk.fm/#/config_options?id=the-configh-file
-*/
-
+#define FIRMWARE_VERSION u8"EoBdY/RjqGg5"
 #define QUICK_TAP_TERM 0
 
 #undef RGB_MATRIX_TIMEOUT
@@ -24,7 +20,7 @@
 #undef MOUSEKEY_WHEEL_INTERVAL
 #define MOUSEKEY_WHEEL_INTERVAL 101
 
-#define SERIAL_NUMBER "EoBdY/dp60g"
+#define SERIAL_NUMBER "EoBdY/RjqGg5"
 #define LAYER_STATE_16BIT
 
 #define TAPPING_TERM_PER_KEY

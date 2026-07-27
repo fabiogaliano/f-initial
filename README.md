@@ -1,31 +1,39 @@
-# My Voyager Keymap
+# f.qwerty — ZSA Voyager Keymap
 
-Custom keymap for ZSA Voyager keyboard, initially generated from Oryx configurator.
+Custom QMK keymap for the ZSA Voyager split keyboard.
 
-## Building
-
-From the QMK root directory:
+## Build & Flash
 
 ```bash
-make voyager:f-initial
+# Set toolchain (keg-only, must be on PATH)
+export PATH="/opt/homebrew/opt/arm-none-eabi-gcc@8/bin:/opt/homebrew/opt/arm-none-eabi-binutils/bin:$PATH"
+
+cd /Users/f/Core/dev/keyboard/qmk/qmk_zsa_voyager
+
+make voyager:f.qwerty           # compile only
+make voyager:f.qwerty:flash     # compile + flash (press reset on left half with paperclip)
 ```
 
-## Flashing
+## Layers
 
-```bash
-make voyager:f-initial:flash
-```
-
-## Features
-
-- Custom layout based on initial Oryx configuration
-- Tap dance functionality
-- Custom macros
-- RGB lighting configuration
+| Layer | Purpose |
+|-------|---------|
+| 0 | Base QWERTY (home row mods) |
+| 1 | Portuguese characters |
+| 2 | Symbols |
+| 3 | Numpad |
+| 4 | Navigation |
+| 5 | Mouse |
+| 6 | F-keys |
+| 7 | Layer switcher + RGB (double-tap bottom-right) |
+| 8 | Window management |
+| 9 | League of Legends |
+| 10 | LoL alt-abilities (MO layer) |
+| 11 | LoL chat mode |
 
 ## Files
 
-- `keymap.c` - Main keymap layout and custom functions
-- `config.h` - Keyboard-specific configuration
-- `rules.mk` - Build options and feature flags
-- `i18n.h` - Internationalization support
+- `keymap.c` — layers, tap dance, RGB, custom keycodes
+- `config.h` — keyboard config (includes required `FIRMWARE_VERSION`)
+- `rules.mk` — build features (tap dance, RGB matrix, layer lock)
+- `i18n.h` — Portuguese character definitions
