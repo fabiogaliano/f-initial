@@ -1,7 +1,0 @@
-#define PT_OSX_AE A(KC_E)
-#define PT_OSX_ACUT KC_RBRC
-#define PT_OSX_TILD KC_QUOT
-#define KC_MAC_UNDO LGUI(KC_Z)
-#define KC_MAC_CUT LGUI(KC_X)
-#define KC_MAC_COPY LGUI(KC_C)
-#define KC_MAC_PASTE LGUI(KC_V)

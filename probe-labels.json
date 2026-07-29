@@ -1,0 +1,182 @@
+{
+  "_comment": "Probe HUD labels for f.qwerty. Source of truth: edit here, then run scripts/sync-probe.sh. Keys are the raw C tokens Probe cannot resolve from keymap.c: our #define aliases and custom keycodes.",
+  "WISPR": {
+    "primary": "Wispr",
+    "secondary": "F13",
+    "role": "custom"
+  },
+  "SHOTTR1": {
+    "primary": "Shot 1",
+    "secondary": "Hyper",
+    "role": "custom"
+  },
+  "SHOTTR2": {
+    "primary": "Shot 2",
+    "secondary": "Hyper",
+    "role": "custom"
+  },
+  "SHOTTR3": {
+    "primary": "Shot 3",
+    "secondary": "Hyper",
+    "role": "custom"
+  },
+  "HM_A": {
+    "primary": "A",
+    "secondary": "Cmd",
+    "role": "modTap"
+  },
+  "HM_S": {
+    "primary": "S",
+    "secondary": "Opt",
+    "role": "modTap"
+  },
+  "HM_D": {
+    "primary": "D",
+    "secondary": "Ctrl",
+    "role": "modTap"
+  },
+  "HM_F": {
+    "primary": "F",
+    "secondary": "Shift",
+    "role": "modTap"
+  },
+  "HM_J": {
+    "primary": "J",
+    "secondary": "Ctrl",
+    "role": "modTap"
+  },
+  "HM_K": {
+    "primary": "K",
+    "secondary": "Opt",
+    "role": "modTap"
+  },
+  "HM_L": {
+    "primary": "L",
+    "secondary": "Shift",
+    "role": "modTap"
+  },
+  "LT_NAV": {
+    "primary": "Return",
+    "secondary": "Nav",
+    "role": "layerTap"
+  },
+  "LT_NUM": {
+    "primary": "Tab",
+    "secondary": "Num",
+    "role": "layerTap"
+  },
+  "LT_SYM": {
+    "primary": "Bksp",
+    "secondary": "Sym",
+    "role": "layerTap"
+  },
+  "LT_ACC": {
+    "primary": "Space",
+    "secondary": "Accent",
+    "role": "layerTap"
+  },
+  "SELWORD": {
+    "primary": "Sel Word",
+    "role": "custom"
+  },
+  "SELLINE": {
+    "primary": "Sel Line",
+    "role": "custom"
+  },
+  "NAV_UND": {
+    "primary": "Undo",
+    "role": "chord"
+  },
+  "NAV_RDO": {
+    "primary": "Redo",
+    "role": "chord"
+  },
+  "NAV_CUT": {
+    "primary": "Cut",
+    "role": "chord"
+  },
+  "NAV_CPY": {
+    "primary": "Copy",
+    "role": "chord"
+  },
+  "NAV_PST": {
+    "primary": "Paste",
+    "role": "chord"
+  },
+  "NAV_ALL": {
+    "primary": "Sel All",
+    "role": "chord"
+  },
+  "NAV_BCK": {
+    "primary": "Back",
+    "role": "chord"
+  },
+  "NAV_FWD": {
+    "primary": "Forward",
+    "role": "chord"
+  },
+  "NAV_TBP": {
+    "primary": "Prev Tab",
+    "role": "chord"
+  },
+  "NAV_TBN": {
+    "primary": "Next Tab",
+    "role": "chord"
+  },
+  "PT_AACU": {
+    "primary": "á",
+    "role": "custom"
+  },
+  "PT_AGRV": {
+    "primary": "à",
+    "role": "custom"
+  },
+  "PT_ACIR": {
+    "primary": "â",
+    "role": "custom"
+  },
+  "PT_ATIL": {
+    "primary": "ã",
+    "role": "custom"
+  },
+  "PT_EACU": {
+    "primary": "é",
+    "role": "custom"
+  },
+  "PT_ECIR": {
+    "primary": "ê",
+    "role": "custom"
+  },
+  "PT_IACU": {
+    "primary": "í",
+    "role": "custom"
+  },
+  "PT_OACU": {
+    "primary": "ó",
+    "role": "custom"
+  },
+  "PT_OCIR": {
+    "primary": "ô",
+    "role": "custom"
+  },
+  "PT_OTIL": {
+    "primary": "õ",
+    "role": "custom"
+  },
+  "PT_UACU": {
+    "primary": "ú",
+    "role": "custom"
+  },
+  "PT_CCED": {
+    "primary": "ç",
+    "role": "custom"
+  },
+  "PT_EURO": {
+    "primary": "€",
+    "role": "custom"
+  },
+  "TOGGLE_LAYER_COLOR": {
+    "primary": "Layer LEDs",
+    "role": "rgb"
+  }
+}

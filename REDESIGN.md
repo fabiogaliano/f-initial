@@ -1,56 +1,91 @@
-# f.qwerty — Keymap Redesign Plan
+# f.qwerty — Keymap Specification
 
-Living design doc. We build this bit by bit; each locked decision gets recorded here.
-Status legend: 🔒 locked · 🤔 discussing · ⬜ not yet raised
+This document specifies the keymap for the ZSA Voyager and records why each
+decision was made. `keymap.c` now exists and is built, so **`keymap.c` is the
+source of truth**; this document is the rationale behind it.
 
-## STATUS (handoff summary)
-- 🔒 **Locked:** D1 home-row mods · D2 thumbs + layer set · D3 pointing/mouse strategy · D4 Nav · D5 Numbers · D6 Accents · D7 Symbols · **D8 Base + Media** · **D9 Mouse/Orbital** · **D10 consistency pass** (Wispr→`F13`; stale refs cleaned)
-- ✅ **All 7 layers are designed.** Base · Nav · Numbers · Symbols · Accents · Media · Mouse.
-- ✅ **D10 audit COMPLETE** — all 6 gaps resolved. ✅ **D12 modules FINAL.**
-- ▶️ **NEXT: write `keymap.c`.** The spec is complete: 7 layers, all keys assigned, modules chosen, RGB defined.
-- 🎨 **D11 RGB locked:** base lavender `191,70,231` · other layers light **only live keys** (the cheatsheet-in-hardware — DIY, ~50–100 lines) · PaletteFx adopted for looks · lighting controls on the Media layer.
-- 🧩 **Modules so far:** IN — Chordal Hold, Permissive Hold, Select Word, Orbital Mouse, **Autocorrect** (core; safe for PT — it's an opt-in typo whitelist, not a spellchecker), **PaletteFx**. PARKED — Repeat Key (no good key). STILL TO DECIDE — Sentence Case, Custom Shift Keys.
-- 📋 **Deferred to future sessions:** app-shortcut audit (Wispr/browser/Herd/etc.) · custom layer overlay build · Accent-layer extras (« » º ª – — " ") + optional Ç-extension · Symbols code-combo keys (`=>`/`->`/`${}`) if wanted later
-- ▶️ **Resume at:** **write `keymap.c`.** Design phase is done — D1–D12 all locked. Nothing written to `keymap.c` yet; this doc is the complete spec. Build commands are in `f.qwerty/CLAUDE.md`. Expect to revise by feel after the first flash (several decisions are explicitly marked "revise after flashing").
-- 🛠 **Layer rendering standard:** ASCII Voyager template in "Layer maps & rendering" §; final SVGs via [keymap-drawer](https://caksoylar.github.io/keymap-drawer) from `keymap.c` (`qmk c2json`).
+The keymap has 6 layers. All keys are assigned.
 
-## Goals (from user)
-- Actually use layers (today: barely used).
-- Stop reaching to the top number row (bad for vim counts/motions).
-- Fix awkward Shift placement (currently outer-pinky, keeps getting reached for).
-- Type Portuguese accents comfortably while working in English.
-- Optimize without a scary rewrite — keep QWERTY, no full alt-layout switch (for now).
-- Add some Getreuer "plugins" (select word, orbital mouse, sentence case, palettefx).
+Two things were amended when the firmware was written, both because ZSA's QMK
+fork is older than this plan assumed: see the note in section 5 (Achordion in
+place of Chordal Hold, vendored files in place of community modules) and in
+section 4 (lighting derived from the keymap rather than a per-layer table).
 
-## Hard constraints
-- ZSA Voyager: 52 keys, **4 thumb keys total (2 per hand)** — thumbs are scarce.
-- macOS primary. Builds from source (QMK), so community modules are on the table.
-- Heavy vim user.
-- Writes English + Portuguese.
+Two things were amended after living with the board:
 
-## Design philosophy (user doesn't use layers today — memorability is the #1 goal)
-- User currently uses **almost no layers** (occasionally Symbols for `~ /`, and hold-Enter nav). Root problem is *remembering*, not the layout.
-- So: **few layers, mnemonic placement, maximum consistency.** Prefer semantic/common-letter mappings (e.g. Z/X/C/V = undo/cut/copy/paste, W = select Word, F = Find) so a key's meaning is guessable.
-- I (assistant) drive the design toward best practices; user reacts. Almost everything is up for change.
-- Back it with a visual memory aid (see Deliverable 2).
+**The Mouse layer and Orbital Mouse were removed.** Orbital Mouse's heading model
+did not feel intuitive in use. Layer 6, the `MOU` toggle, `MOUSEKEY_ENABLE`, the
+`features/orbital_mouse.*` files and the `MS_*` compat shims are all gone; section
+3's Layer 6 and the Mouse parts of sections 5, 6 and 8 are kept below as history
+only. The left outer row 2 key is now `KC_NO` and is free for a new function.
 
-## Deliverables
-1. **Rebuilt keymap** (`f.qwerty/keymap.c`) per decisions below.
-2. **Floating layer-cheatsheet overlay** (after keymap): always-on-top, translucent macOS overlay showing the keyboard; highlights/swaps to the active layer live so the user can *see* what each hold does. Interim solution available today: **ZSA Keymapp** already shows the active layer live — use it while learning. Custom overlay is a follow-up build project.
+**Then the pre-redesign mouse layer was restored** from commit `53880a7`, using plain
+`KC_MS_*` keycodes: 8-direction steering on the left hand, clicks on the left thumbs,
+acceleration on the top row. `QK_LLCK` and `TD(DANCE_8)` were dropped, since layer
+lock and tap dance stay disabled. **Nothing activates it yet** - it is deliberately
+unreachable until an activation key is chosen.
 
-## Ergonomics driver (shapes every decision)
-- User has **chronic light inflammation in the RIGHT wrist**. Willing to retrain for ergonomic gain.
-- Bias all decisions toward **offloading the right hand/wrist**:
-  - Split heavy keys off the right thumb; favor the left where balanced.
-  - Keep reaches **off the top row**; favor home position.
-  - Minimize right-**pinky** stretches when designing Nav/Num/Sym.
-  - Get **mousing off the right hand** where possible (keyboard mouse / left-hand pointer).
-- Note: this makes a hand-balanced alt layout (e.g. Colemak-DH) more justified than before — parked, revisit after foundation if wrist persists.
+**Space and Enter went back to their pre-redesign thumbs.** The rule in section 7
+about loading the left thumb moved Space to the left, but a thumb press on a light
+switch is near the lowest-strain action on the board, so the benefit did not repay
+the daily cost of unlearning. The tapped letters moved; the **layers did not**.
+Space and Enter simply traded slots: `LT_NAV` is now `LT(NAV, KC_ENT)` on the left
+inner thumb and `LT_ACC` is `LT(ACC, KC_SPC)` on the right outer. Tab and Backspace
+did not move. This keeps Nav opposite its right-hand arrow cluster and keeps Media a
+two-left-thumb chord. Section 3's layer table reflects the new thumbs.
 
-## Layer maps & rendering (standard format)
-Every layer is documented in this ASCII **Voyager template** — physical map: outer pinky columns · number row · 3 alpha rows · 2 thumbs per hand. `—` = transparent (falls through to Base) · `·` = undecided slot.
+---
 
-**Reference key names** (physical positions — this is the *stock* Voyager layout, used only for naming slots like "the `T` key" or "outer row 2"):
+## 1. Requirements
+
+**Goals**
+
+- Use layers. The current keymap has 12 layers, but the user uses almost none of them.
+- Remove the number row from normal typing. The top row is bad for vim counts and motions.
+- Move Shift off the outer pinky.
+- Type Portuguese accents while the system stays in English.
+- Keep QWERTY. Do not change to an alternative alphabet layout.
+
+**Constraints**
+
+- The Voyager has 52 keys. It has 4 thumb keys, 2 for each hand. Thumb keys are scarce.
+- The primary operating system is macOS.
+- The firmware is built from source with QMK. Community modules are available.
+- The user is a heavy vim user.
+- The user writes English and Portuguese.
+
+**Medical constraint**
+
+The user has chronic light inflammation in the RIGHT wrist. Every decision moves
+load to the left hand. Four rules follow from this:
+
+- Put the heavy thumb keys on the left thumb.
+- Keep frequent keys off the top row.
+- Keep the right pinky reaches short.
+- Move pointer control off the right hand.
+
+**Design principle**
+
+Memory is the primary constraint, not speed. The user does not remember layers today.
+So: use few layers, put keys where their meaning is obvious, and keep the rules
+consistent. Example: `Z` `X` `C` `V` keep undo, cut, copy and paste, because those
+positions are already known.
+
+---
+
+## 2. Notation
+
+Each layer map shows the physical Voyager: an outer pinky column, a number row,
+3 alphabet rows, and 2 thumb keys for each hand.
+
+| Symbol | Meaning |
+|---|---|
+| `—` | Transparent. The key falls through to the base layer. |
+| `×` | Dead. The key does nothing (`KC_NO`). |
+
+Key positions are named after the **stock** Voyager layout. The name `T` means
+the physical `T` position, not the character that the key sends.
+
 ```
 ┌───┬───┬───┬───┬───┬───┐         ┌───┬───┬───┬───┬───┬───┐
 │ - │ 1 │ 2 │ 3 │ 4 │ 5 │         │ 6 │ 7 │ 8 │ 9 │ 0 │ = │  row 0
@@ -66,16 +101,36 @@ Every layer is documented in this ASCII **Voyager template** — physical map: o
               └───┴───┘               └───┴───┘
 ```
 
-**THE ACTUAL BASE LAYER (current truth):**
+---
+
+## 3. Layers
+
+| # | Layer | Access |
+|---|---|---|
+| 0 | Base | — |
+| 1 | Nav | Hold left inner thumb (`Enter`) |
+| 2 | Numbers | Hold left outer thumb (`Tab`) |
+| 3 | Symbols | Hold right inner thumb (`Backspace`) |
+| 4 | Accents | Hold right outer thumb (`Space`) |
+| 5 | Media | Hold both left thumbs (`Enter` + `Tab`) |
+
+The layer headings further down still name the pre-swap tap letters. Read them by
+thumb position: Nav and Numbers are the left thumbs, Symbols and Accents the right.
+
+Each layer is held by the hand opposite to its content. The holding thumb does not
+fight the typing hand.
+
+### Layer 0 — Base
+
 ```
 ┌───┬───┬───┬───┬───┬───┐         ┌───┬───┬───┬───┬───┬───┐
-│WSP│SH1│SH2│SH3│   │   │         │   │   │   │   │   │   │
+│WSP│ 1 │ 2 │ 3 │ 4 │ × │         │ × │ × │ × │ × │ × │ × │
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
 │HYP│ Q │ W │ E │ R │ T │         │ Y │ U │ I │ O │ P │ \ │
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
 │MOU│ A │ S │ D │ F │ G │         │ H │ J │ K │ L │ ; │ ' │
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
-│ESC│ Z │ X │ C │ V │ B │         │ N │ M │ , │ . │ / │   │
+│ESC│ Z │ X │ C │ V │ B │         │ N │ M │ , │ . │ / │ × │
 └───┴───┴───┴───┴───┴───┘         └───┴───┴───┴───┴───┴───┘
               ┌───┬───┐               ┌───┬───┐
               │SPC│TAB│               │BSP│ENT│
@@ -83,409 +138,584 @@ Every layer is documented in this ASCII **Voyager template** — physical map: o
    hold: Nav ─┘   └─ Num        Sym ─┘   └─ Accents
               └── both = Media ──┘
 ```
-Home-row mods (D1): `A`=Cmd `S`=Opt `D`=Ctrl `F`=Shift · `J`=Ctrl `K`=Opt `L`=Shift · `H` plain.
-`WSP`=Wispr(F13) · `SH1/2/3`=Shottr Hyper+1/2/3 · `HYP`=Hyper · `MOU`=Mouse toggle. Blanks are **reserved**, not unfinished.
-**Pretty renders / final artifact:** [keymap-drawer](https://github.com/caksoylar/keymap-drawer) (parses QMK json → SVG; handles Voyager physical layout, hold-taps, combos; [web app](https://caksoylar.github.io/keymap-drawer) + CLI). Workflow once `keymap.c` exists: `qmk c2json keymap.c > keymap.json` → keymap-drawer → SVG for doc/README + base for the floating overlay. Single source of truth = `keymap.c`; ASCII here is truth until then.
 
-## Decisions
+**Home row mods**
 
-### 🔒 Decision 1 — Home row mods + Shift/Caps + freed pinky
-User rests **index-on-H** (vim style; has an arrows layer on H J K L), so mods go on the keys actually rested on, and H stays plain.
+| Key | Mod | Key | Mod |
+|---|---|---|---|
+| `A` | Cmd ⌘ | `H` | plain |
+| `S` | Option ⌥ | `J` | Ctrl |
+| `D` | Ctrl | `K` | Option ⌥ |
+| `F` | **Shift** | `L` | **Shift** |
 
-- **Left home row:** `A`=Cmd ⌘ · `S`=Option ⌥ · `D`=Ctrl · `F`=**Shift**
-- **Right home row:** `H`=plain · `J`=Ctrl · `K`=Option ⌥ · `L`=**Shift**
-  - **Comfort-driven (user feedback):** holding middle/ring (`D`,`S`) feels weird; pinky comfortable, index fine. So **Shift** (longest-held mod) → comfortable fingers: left **index `F`**, right **pinky `L`**. Rarely-sustained **Opt/Ctrl** → the "weird" ring/middle.
-  - **Cmd stays on left pinky `A`** (keep the habit user likes); Cmd only on the left.
-  - `H` stays plain: most-common letter on that hand + vim/arrow key.
-  - Shift is asymmetric (L-index `F` / R-pinky `L`) but both capitalize opposite-hand letters on comfortable fingers.
-- **Remove** old outer-pinky Left Shift → freed for Wispr (below).
-- **Keep** the top outer-left **Hyper key** (`KC_HYPR`) — used for Shottr (Hyper+1/2/3).
-- ~~**Caps Word:** tap both Shifts together (`F`+`L`).~~ **SUPERSEDED by 8h — Caps Word dropped entirely.**
-- ~~**Freed outer-pinky key (old Shift spot):** Wispr Flow push-to-talk.~~ **SUPERSEDED by 8d (moved to outer row 0) and 8j (trigger changed to `F13`).**
-- **Anti-misfire:** enable Chordal Hold + Permissive Hold; tapping term ~200ms (tune on hardware).
-- Old dead config to clean up: `get_tapping_term()` special-cases `KC_J`/`KC_K` from a previous setup.
+The user rests the index finger on `H`, in vim style. So `H` stays plain: it is the
+most frequent letter on that hand and it is also the left arrow on the Nav layer.
 
-### 🔒 Decision 2 — Thumbs + slimmed layer set (Option B, wrist-driven)
-Thumb **taps** rebalanced to offload the right thumb; **holds** open layers:
+Shift is held longer than the other mods, so it goes on the comfortable fingers:
+the left index (`F`) and the right pinky (`L`). The middle and ring fingers are
+uncomfortable to hold, so they get Option and Ctrl, which are held briefly.
+Shift is asymmetric, but both keys capitalize letters that are typed by the other hand.
 
-| Hand | Tap | Hold → |
+Cmd is on the left pinky (`A`) only. This keeps a habit that the user likes.
+
+**Top row**
+
+The digits are gone. They live on the Numbers layer.
+
+**Amended: the digits are back on Base, and Shottr moved to Nav.** Aerospace
+switches workspace on `⌥1`-`⌥4` and Option is the home row `S`, so the digit row
+has to be plain digits for that habit to survive. Positions `1`-`4` are now
+`KC_1`-`KC_4`. The three Shottr captures moved to the **same positions on the Nav
+layer**, still `Hyper+1`-`Hyper+3`, so the physical key stays the number the user
+knows. `Hyper+5` (scrolling capture) is still unmapped.
+
+This replaced an earlier attempt where the Base keys checked `MOD_MASK_ALT` at
+runtime and sent either a digit or a Shottr chord. Moving Shottr to a layer does
+the same job with no code at all.
+
+The digits are otherwise gone from Base; `5`-`0` live on the Numbers layer.
+
+`-` and `=` are removed from the base layer. Both have a home on the Symbols layer.
+
+**Left outer column**
+
+| Row | Key | Function |
 |---|---|---|
-| Left | `Space` | Nav |
-| Left | `Tab` | Numbers |
-| Right | `Backspace` | Symbols |
-| Right | `Enter` | **Accents (PT)** — resolved by D6 |
+| 0 | `WSP` | Wispr Flow push-to-talk. Sends `F13`, held. |
+| 1 | `HYP` | Hyper (`KC_HYPR`). Used for Shottr and global hotkeys. |
+| 2 | — | Was `MOU`, the Mouse layer toggle. Now `KC_NO` and free. |
+| 3 | `ESC` | Escape. Plain key, no hold function. |
 
-- ✅ **Pending revision RESOLVED:** Enter-hold went to Accents (D6). Fn/Media did *not* become a right-thumb combo — it became **both LEFT thumbs** (8g), and Mouse got its own dedicated key instead (8d).
-- `Space` → left thumb: offloads inflamed right side; pairs most-used thumb with most-used layer (Nav).
-- Left thumbs hold right-hand-content layers (Nav, Numbers) so opposite hands cooperate.
-- ~~Active layers cut 12 → 5.~~ **Final count is 12 → 7:** `0` Base · `1` Nav (hold L-Space) · `2` Numbers (hold L-Tab) · `3` Symbols (hold R-Bspc) · `4` Accents (hold R-Enter) · `5` Media (hold both L thumbs) · `6` Mouse (toggle `MOU`).
-- Portuguese: macOS dead keys for now (no layer).
-- **Archive** League (old 9/10/11) + layer-switcher (old 7) → `f.qwerty/archive/league.md` (restorable).
-- Old per-key tapping-term hacks for `KC_J`/`KC_K` to be cleaned up.
-- **Mouse: still open** — leaning keep + upgrade to Orbital Mouse specifically to get mousing off the right wrist.
+Row 2 is the best key in the column, because the pinky slides sideways with no
+up or down stretch. So it gets the highest-value function: the Mouse layer.
+The Mouse layer removes work from the right wrist, which is the main medical goal.
 
-### 🔒 Decision 3 — Pointing / mouse strategy (wrist-driven)
-Goal: cut right-hand mousing hard.
-- **Keyboard mouse:** replace clunky hold-`Esc`+`ASDW` with **Orbital Mouse** (Getreuer module) on its own small Mouse layer. ~~Access via both-left-thumbs tri-layer or a Nav-layer key.~~ **SUPERSEDED by 8d/D9 — access is a dedicated `MOU` toggle key** on the left outer column, row 2.
-- **Select Word** (Getreuer module) → **Nav layer**. Replaces the KM "Select a word" (Hyper+W: `Opt→, ⇧Opt←, Opt→, ⇧Opt←`) and "Select a line" (`Cmd←, Cmd⇧→`) macros. One keycode, all apps, tap-to-extend.
-- **clavier.app** (keyboard clicking, Homerow/Shortcat-style) stays — pairs with the above.
-- **SlimBlade Pro:** it's a *stationary* trackball → placement problem. Move it **between the spread keyboard halves** or adjacent; strongly consider **left-hand** operation to spare the right wrist.
+The Mouse key toggles. Pointer work lasts seconds to minutes, and a pinky cannot
+hold that long.
 
-### KM cleanup notes (from reading Macros.plist)
-- `;` "hack" = ccstone Multi-Press Template making `;` a **browser leader key** (single/double/triple press) + a `Cmd+Shift+;` macro to enable/disable that group. NOT Portuguese-related. Keep or disable freely.
-- KM "Select a word / line" macros → **superseded** by firmware Select Word (delete after firmware works).
-- Other minor hacks seen: `Opt+W`→`@`, Hyper+G=Search, Hyper+Y=KM trigger palette.
+Wispr is on row 0. The distance does not matter, because the key is held: the user
+reaches once, keeps the finger there, speaks, and releases.
 
-### 🔒 Decision 4 — Nav layer (hold left `Space`)
-Principle: **right hand = MOVE, left hand = EDIT** (edit keys on the real Cmd-shortcut positions). Left home-row mods stay live → `Shift/Opt/Cmd + arrow` give select / word-jump / line-jump **for free** (no dedicated keys).
+Escape stays on row 3. The habit is strong, and habit is more valuable than the
+usual vim convention of moving Escape to the Caps position.
 
-Right hand (3 spatial tiers):
-- home `H J K L` = `← ↓ ↑ →`
-- bottom `N M , .` = `Home · PgDn · PgUp · End` (extremes, matched under each arrow)
-- top `Y U I O` = `prev-tab · next-tab · back · forward` (GUI app nav = mouse reduction)
+**Right outer column**
 
-Left hand (edit, mnemonic):
-- top `Q W E R` = `Esc · Select Word · Select Line · Redo`; `G` = Find
-- home `A S D F` = normal modifiers (for mod+arrow combos)
-- bottom `Z X C V B` = `Undo · Cut · Copy · Paste · Select-All`
+| Row | Key | Note |
+|---|---|---|
+| 0 | `×` | Reserved. |
+| 1 | `\` | Rare, but already habitual. |
+| 2 | `'` | Frequent in English contractions. Easy sideways position. |
+| 3 | `×` | Reserved. |
 
-`W` Select Word = firmware Select Word module (replaces KM Hyper+W). Note: Keymapp is flaky for this user (code, not Oryx) → strengthens case for custom overlay.
+The rule "move load off the right hand" applies to keys that are **pressed often**.
+A rare key on the right side costs the wrist nothing. So `\` and `'` stay.
 
-### 🔒 Decision 5 — Numbers layer (hold left `Tab`)
-Calculator numpad under the **right hand** (fixes top-row reach + vim counts). Aligned to index-on-`H` rest.
+### Layer 1 — Nav (hold left `Space`)
 
-Right hand:
-- top `Y U I` = `7 8 9`, `O` = `=`
-- home `H J K` = `4 5 6`, `L` = `Enter`
-- bottom `N M ,` = `1 2 3`, `.` = `.` (decimal)
-- **🔒 `0` = the right OUTER thumb (the `Enter` key's position)** — updated, resolves D10 gap #4. (The old note said "right thumb, `Space` position," which went stale when D2 moved `Space` to the left thumb.) Chosen over the inner thumb because: Enter is already on this layer at `L` (calculator position), so the thumb copy is redundant — and this **keeps `Backspace` live on the inner right thumb**, which matters most exactly when typing digits. Also reads like a real numpad: `0` is the big key under the digits.
-- **🔒 Two `=` keys on this layer is intentional**, not a slip (resolves D10 gap #3). `T` (with the operators) and `O` (calculator position). The left key would otherwise be empty, so the duplicate is free, and it lets you type `4+5=` without the hands crossing.
-- **🔒 Nothing else added.** Layer covers digits, all math operators, Enter, decimal, and live modifiers (so `Cmd+1…9` still works). Considered and rejected: hex letters, parens, thousands separator — all would add memory load for rare gains.
-
-Left hand:
-- top `Q W E R T` = `+ − * / =` (math operators)
-- home `A S D F` = normal modifiers → **`Cmd+1…9`** for tab/desktop switching (bonus)
-
-Depends on: base top row must **stop emitting digits** (remove the fallback) — handled in the Base-layer decision.
-
-### 🔒 Decision 6 — Portuguese Accent layer (core locked; variant layout + output method still open)
-Studied romak's "Alpha 2" sticky layer + Ç-extension (`layout-research/romak/`) and ran web research on macOS accent input. Two things locked:
-
-- **Placement = mnemonic-literal.** Each accent sits on its own QWERTY letter key so there is nothing to memorize: `á`→A, `é`→E, `í`→I, `ó`→O, `ú`→U, `ç`→C. Diacritic **variants** (`à â ã · ê · ô õ`) go on **nearby** keys (positions TBD — next task).
-  - Accepted tension: this puts `é í ó ú` on the **top row** (QWERTY vowels aren't home-row). OK here because the layer is held/occasional, not hammered like the number row. Only `á` (A) and `ç` (C) are non-top.
-- **Trigger = HOLD the right thumb (the Enter thumb).** `LT(ACCENT, KC_ENT)`: tap = Enter (unchanged), hold = accent layer momentarily. Mental model: "**Shift, but for accents**" — hold, tap the vowel, release. `café` = `c a f` + hold-thumb-`e`.
-  - **Why hold, not one-shot** (reversed a brief interim lean): (1) a true tap-once one-shot needs its *own* dedicated tap, which can't share the Enter thumb without losing Enter; (2) the wrist cost of holding is low because the **highest-frequency accents (á é ç ã) are all LEFT-hand**, typed opposite the right thumb-hold — only the rarer `í ó ú` are same-hand. A one-shot key can be added later on a spare key if wanted.
-- **Consequence:** Fn/Media loses the Enter hold. ~~Demotes to a two-*right*-thumb combo.~~ **SUPERSEDED by 8g — it became both LEFT thumbs**, keeping the trigger off the inflamed hand.
-
-**🔒 Full vowel map (locked; user will revise by feel after flashing).** Reduces to **3 rules by accent shape** + one A-corner exception:
-```
-   Q  W  E  R  T        Y  U  I  O  P
-   â  ·  é  ·  ·        ·  ú  í  ó  ·
-
-   A  S  D  F  G        H  J  K  L  ;
-   á  ã  ê  ·  ·        ·  ·  ô  õ  ·
-
-   Z  X  C  V  B        N  M  ,  .  /
-   à  ·  ç  ·  ·        ·  ·  ·  ·  ·
-```
-- **Rule 1 — Acute ´ = on the vowel itself:** `á é í ó ú` on A E I O U. Nothing to learn.
-- **Rule 2 — Circumflex ^ = middle-finger home key:** `ê`→D, `ô`→K (mirror pair).
-- **Rule 3 — Tilde ~ = ring-finger home key:** `ã`→S, `õ`→L (mirror pair).
-- **`ç`→C** (its own letter).
-- **A-corner exception:** grave `à`→Z (below A) and circumflex `â`→Q (above A). A lives on the weak pinky with no middle-home key of its own, so its two extras tuck around A instead of joining the mirror. `à` gets the easier down-key (more frequent than `â`); `â`'s `^` "points up" → Q.
-- Wrist bonus: the two right-hand variants (`ô õ`) sit on the **home row** (K/L) — no top-row stretch on the inflamed hand.
-
-**🔒 Output method = macOS dead keys (default layout), NOT Unicode.** Firmware fires the built-in Mac accent combos per tap — `á`=⌥e·a, `à`=⌥\`·a, `â`=⌥i·a, `ã`=⌥n·a, `é`=⌥e·e, `ê`=⌥i·e, `í`=⌥e·i, `ó`=⌥e·o, `ô`=⌥i·o, `õ`=⌥n·o, `ú`=⌥e·u, `ç`=⌥c. Chosen over Unicode because:
-- **Zero macOS config** — works on the default keyboard; no "Unicode Hex Input" source to enable.
-- **Breaks nothing** — Unicode Hex Input hijacks Option and would kill **Nav-layer ⌥+arrow word-jumps (D4)**. Dead keys only flash Option for a split-second per accent. (The old "would also kill Wispr ⌥." argument is now moot — Wispr moved to `F13`, see 8j — but the Nav argument alone still holds.)
-- **Capitals free** — hold Shift + accent key → `Á É` (OS composes).
-- **Accepted tradeoff:** two-step dead keys don't fire in **Terminal** — fine, user writes PT in apps (already noted). `ç` (direct ⌥c) works even in Terminal.
-- Implementation: each accent key = a small macro (e.g. `SS_LOPT("e") "a"`). Same mechanism will host the extras below.
-
-**Remaining (minor, revisit anytime — NOT blocking):**
-- **Extras:** `« »`, `€`, `º ª`, `– —`, `" "` (all also ⌥-combos) — add to this layer later if wanted.
-- **Optional advanced:** romak Ç-extension (`ç`→one-shot giving `ã`/`õ` + `-ão`/`-ões` word macros). Bespoke/high-investment — revisit only if wanted.
-
-### 🔒 Decision 7 — Symbols layer (locked; revise by feel after flashing)
-Symbols = **hold right Backspace**. Researched real layouts (Getreuer, Callum, Miryoku, Seniply, Sunaku, justinmklam) — chose **mirrored brackets** (Callum-style: most *memorable*, one rule for all pairs) over clustered/roll-optimized (faster but more to learn). Volume biased to the **left hand** (right thumb holds the layer + right wrist is the sore one).
+The right hand moves the cursor. The left hand edits. The left home row mods stay
+live, so `Shift`, `Option` and `Cmd` with an arrow give select, word jump and line
+jump. No extra keys are needed for those.
 
 ```
-SYMBOLS · hold BSP        (— = transparent → Base)
-
 ┌───┬───┬───┬───┬───┬───┐         ┌───┬───┬───┬───┬───┬───┐
-│ — │ — │ — │ — │ — │ — │         │ — │ — │ — │ — │ — │ — │
+│ × │ × │ × │ × │ × │ × │         │ × │ × │ × │ × │ × │ × │
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
-│ — │ ? │ ! │ & │ - │ + │         │ ` │ : │ — │ — │ — │ — │  ← operators
+│ × │ESC│SEL│SLN│RDO│ — │         │TB←│TB→│BCK│FWD│ — │ × │
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
-│ — │ < │ [ │ { │ ( │ = │         │ | │ ) │ } │ ] │ > │ — │  ← CONTAINERS (mirror)
+│ × │CMD│OPT│CTL│SFT│FND│         │ ← │ ↓ │ ↑ │ → │ — │ × │
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
-│ — │ — │ @ │ # │ $ │ € │         │ ~ │ ^ │ % │ * │ — │ — │  ← meta/€ (L) · rares (R)
-└───┴───┴───┴───┴───┴───┘         └───┴───┴───┴───┴───┴───┘
-                                        (, . / stay = Base)
-```
-**Four shelves (the whole layer):**
-1. **Home = containers, fully symmetric:** `< [ { ( = │ | ) } ] >`. Brackets **nest** and mirror to the same finger per pair — `(`↔`)` index, `{`↔`}` middle, `[`↔`]` ring; `< >` on the outer pinkies **pointing outward**; `=`/`|` anchor the center (inner index).
-2. **Operators (top):** `? ! &` + math `- +`; `` ` `` (template literal) and `:` on the right.
-3. **Meta/currency (bottom-left):** `@ # $ €` on strong fingers (Swift/JS + PT).
-4. **Rares (bottom-right):** `~ ^ % *` grouped in one fixed, findable home (user's call — "I know the tilde lives bottom-right"). Rare → negligible right-hand load.
-
-- **Base pass-through:** `, . / ' ;` and quotes `" '` stay on Base (no slot needed here). Number row stays clean.
-- **Deliberately sparse right hand** = fewer things to remember (user's #1 goal) + rests the inflamed wrist. Rejected: number-order `!@#$%^&*` top row (would burn prime keys on rare symbols — Getreuer's frequency data) and code-combo keys (`=>`/`->`/`${}` — user chose clean; can add later).
-- Output: shifted-number symbols have **no Base home** once digits move to a layer, so this layer is their only home. `€` = ⌥⇧2 macro (like the accents).
-
-### 🔒 Decision 8 — Base layer + Media layer (COMPLETE)
-
-**🔒 8a — Freed top row (partial lock).** Digits are gone (they live on Numbers, D5). Researched what others do with a freed top row (Getreuer, Miryoku-derived, Seniply, Moonlander/Voyager builds): the practiced convention is *not* to blank it but to banish the least-valuable keys there, most commonly F1–F12. **Rejected for this user — barely uses F-keys**, so filling the row with them wastes it tidily instead of usefully.
-
-Locked instead:
-```
-BASE · top row
-┌───┬───┬───┬───┬───┬───┐         ┌───┬───┬───┬───┬───┬───┐
-│   │SH1│SH2│SH3│   │   │         │   │   │   │   │   │   │
-└───┴───┴───┴───┴───┴───┘         └───┴───┴───┴───┴───┴───┘
-     full area OCR                  reserved: special shortcuts
-```
-- **Shottr captures on the physical `1` `2` `3` keys** — firmware fires `Hyper+1/2/3` internally. Zero new memory: the number already in muscle memory *is* the key. **Supersedes** the earlier `F`/`A`/`O`/`S` mnemonic plan (that was a second naming system on top of one the user already knows). `Hyper+5` (scrolling capture) not mapped for now.
-- **Remaining 9 slots deliberately empty**, reserved for future "special shortcuts" — to be filled from the app-shortcut audit, not invented now.
-- **🔒 8b — `-` and `=` REMOVED from Base** (resolves the doc's "fate of `=`" open item, and takes `-` with it). Both already have a home on Symbols: `-`→`R`, `=`→`T`. Rationale: one key, one home — duplicates are what make a layout unmemorable.
-  - ⚠️ **Watch after flashing:** `-` is high-frequency (PT/EN hyphenation, kebab-case, `--flags`) and now costs a **right-thumb hold** (Symbols) on the inflamed hand. Key itself is left-index, so the hold is light — but re-evaluate with real typing.
-- **Consequence:** F1–F12 need a home → **resolved by 8i: not mapped at all** (user declined).
-- **Consequence:** with F-keys and Shottr off it, the Fn/Media layer's remaining job is media only → **resolved by 8g: kept as a Media layer**, retriggered from both left thumbs.
-
-**🔒 8c — "Back to Base" key: NOT needed, dropped.** Research (QMK docs + community practice) is clear that with every layer momentary/thumb-held, *releasing the thumb is the return to Base* — that's what `MO`/`LT` do. A dedicated `TO(0)` is an anti-pattern in a held-layer design; it only earns its keep as an escape from a **locked** layer, and tapping Layer Lock again already unlocks. One key, not two. Resolves the doc's "consistent back-to-Base key" open item.
-
-**🔒 8d — LEFT outer column (the 4 left-pinky keys).**
-```
-row 0   WISPR   ← hold-to-talk (Wispr Flow push-to-talk)
-row 1   HYPER   ← unchanged (Shottr + global hotkey namespace)
-row 2   MOUSE   ← toggle Mouse layer on/off
-row 3   ESC     ← unchanged (user kept the habit)
-```
-- **Esc stays put (user's call).** Overrode the research convention (vim users usually move Esc off the bottom-outer to the Caps position) because the habit is already in the fingers and habit is worth a lot when memorability is the goal. It also *improves* without moving: it loses its old second job (`LT(5, KC_ESCAPE)` — hold opened a layer), so it becomes a plain, misfire-proof Esc.
-- **Wispr → row 0.** Fine on a far key because it's a *hold*: reach once, park the finger, talk, release. The reach doesn't repeat. (Was going to be row 2 per D1 — moved.)
-- **Row 2 = the best key in the column** (pinky slides straight sideways, no up/down stretch), so it got the highest-value job: **Mouse layer toggle.**
-  - **Why:** D3's entire purpose is getting the right hand off the trackball, and a dedicated key makes the most valuable feature the easiest to reach. Row 2 was free and needed a job; Mouse was the highest-value candidate for it.
-  - (Its old access was "hold both left thumbs." That chord is now the **Media** trigger — see 8g. Note the doc briefly justified this swap by claiming chords are bad for this user; that was the assistant's inference, not the user's position, and is retracted.)
-  - **Toggle, not hold** (`TG(MOUSE)`): mousing lasts seconds-to-minutes; holding a pinky that long is its own strain.
-  - Mouse keys sit under the **left** fingers → the whole pointing operation happens on the good side, right wrist never involved.
-  - **Supersedes** D3's "hold both left thumbs tri-layer" access and frees that chord.
-- Rejected for row 2: a second Shift (that's the placement D1 is escaping) and Layer Lock (wrong hand — see 8e).
-
-**🔒 8e — Layer Lock: DROPPED for v1.** Considered and rejected, not forgotten.
-- Layer Lock solves the pain of holding a thumb down for a long time — but **this design already avoids that pain**: every layer is held by the hand *opposite* its content (left thumb holds Nav/Numbers, right hand does the typing). The holding thumb isn't fighting the typing hand, it's just resting. That's the situation where people reach for Layer Lock, and it doesn't apply here.
-- User also reports never having used layer-lock on the old 12-layer map. Adding it = one more thing to forget, which is the exact failure mode this redesign exists to fix.
-- **Revisit trigger:** if after flashing the user thinks "I've been holding Tab forever" during long digit runs. One-line change to add.
-- If it ever is added: it must go on the **right hand** (left thumb is busy holding the layer; right hand is idle), using the Getreuer/QMK pattern of `QK_LAYER_LOCK` on Base + `KC_TRNS` on every other layer so one fixed spot locks whichever layer is active. Note research shows real keymaps put it on a **thumb** — unavailable here, all 4 thumbs are spoken for.
-
-**🔒 8f — RIGHT outer column (the 4 right-pinky keys).**
-```
-row 0   (empty)   ← reserved (was `=`; top row = the row we're escaping)
-row 1   \         ← unchanged (rare, already habitual, nothing better competing)
-row 2   '         ← unchanged (frequent in EN contractions; sits in the easy sideways slot)
-row 3   (empty)   ← reserved (old dead TD key)
-```
-- **Principle correction recorded:** "offload the right hand" does **not** mean emptying this column. A key you rarely press costs the wrist nothing — strain comes from keys you *hit*. So the rule is only: nothing *frequent* lands here. `\` and `'` both stay.
-- Both free slots stay **empty and reserved** for the app-shortcut audit, same treatment as the base top row. Deliberately not filled with invented content.
-
-**Freed-key inventory update:** old bottom-right `TD(DANCE_0)` is **fully dead** — it was single-tap `Option+E` (acute dead key), double-tap → layer 7. Accents are superseded by D6; layer 7 was archived by D2. Slot is free.
-
-**🔒 8g — Media layer KEPT (layer count stays 5), triggered by a dedicated key.**
-Rejected putting media on the Nav top row ("too much on top"). User asked for a dedicated media layer preserving the media keys they already know, rest blank.
-```
-MEDIA · hold base top-row `5` position          (blank = KC_NO, does nothing)
-
-┌───┬───┬───┬───┬───┬───┐         ┌───┬───┬───┬───┬───┬───┐
-│   │   │   │   │   │   │         │   │   │   │   │   │   │  ← free: future launcher row
-├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
-│   │   │   │   │   │   │         │   │   │   │   │   │   │
-├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
-│   │   │   │   │   │   │         │ ⏮ │ ⏯ │ ⏭ │ ■ │   │   │  ← H J K L
-├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
-│   │   │   │   │   │   │         │ 🔉│ 🔇│ 🔊│   │   │   │  ← N M ,
+│ × │UND│CUT│CPY│PST│ALL│         │HOM│PGD│PGU│END│ — │ × │
 └───┴───┴───┴───┴───┴───┘         └───┴───┴───┴───┴───┴───┘
 ```
-- **Improved on the old positions (user's idea).** Old layer 7 had transport on `I O P \` (top alpha row) and volume on `N M ,`. User moved transport to sit **directly above** the volume keys → transport lands on the **home row** `H J K`, minimal travel on the inflamed hand. One idea per finger, stacked: **index** prev/vol-down · **middle** play-pause/mute · **ring** next/vol-up · **pinky** stop (least used, off to the side).
-- `■` stop is near-useless on macOS (most apps treat it as play/pause) — kept because the user asked; first thing to drop if the key is ever wanted back.
-- **🔒 Trigger = hold BOTH LEFT THUMBS** (`Space` + `Tab` together).
-  - An interim proposal put it on a dedicated base top-row key (above `T`); **user rejected the position**, and the left hand has no other free comfortable key (outer column full: Wispr/Hyper/Mouse/Esc · alphas are letters · both thumbs already assigned).
-  - On the merits the chord is the better key anyway: **zero reach**, thumbs are the strongest fingers, both are already resting there, and it's still **opposite-hand** from the right-hand media keys.
-  - Reads logically: `Space` alone = Nav · `Tab` alone = Numbers · **both = the third thing**. Standard ergo-keyboard tri-layer pattern, and it costs **no key** — the two free top-row slots stay reserved.
-  - ⚠️ **Correction to an earlier draft of this doc:** it claimed the chord was rejected because "the user forgets chords / a key you can point at beats a gesture." **The user never said that** — it was the assistant's inference from "I can't remember layers" and the user corrected it. Do not treat "chords are bad for this user" as an established constraint.
-- **Consequence:** the old D2/D6 "Fn/Media = hold both right thumbs" chord is **dead** — replaced by both-*left*-thumbs, which also moves the trigger off the inflamed hand.
 
-**📚 Reference — what a key can actually do** (asked by user; governs how the reserved slots get filled later)
-A USB keyboard can **only send keystrokes** — it cannot run a script, call an API, or invoke a skill. Everything else is a chain: *keyboard sends a keystroke nobody else uses → a Mac-side app hears it → that app does the real work.* (This is exactly why the Hyper namespace exists: Ctrl+Alt+Shift+Cmd collides with nothing.) Three levels:
-1. **Send an existing shortcut** — zero setup if the app has one (e.g. Shottr `Hyper+1`); otherwise assign it in the app first, then point a key at it.
-2. **Type text (QMK macro)** — zero setup, no Mac app involved. A key can type an entire prompt preamble straight into Claude Code. Limits: goes to whatever is focused; long strings eat firmware space.
-3. **Trigger a script/skill** — needs one Mac-side listener (**Raycast** — user already has it — or Keyboard Maestro / Hammerspoon). **Pro trick: send `F13`–`F20`.** No physical Mac keyboard has those keys, so they can never collide; Raycast catches them and runs anything.
-- **Planned use:** the Media layer's empty top row becomes a **launcher row** (F13, F14, F15… → Raycast scripts). Details deferred to the app-shortcut audit.
+The right hand has 3 tiers. The bottom row holds the extreme of the arrow above it:
+`Home` under `←`, `Page Down` under `↓`, `Page Up` under `↑`, `End` under `→`.
 
-**🔒 8h — Caps Word: DROPPED.** D1 planned it on a tap-both-Shifts (`F`+`L`) combo with no dedicated key. User rarely writes SCREAMING_CASE constants, so it would never fire. **Supersedes D1's Caps Word line.** Also removes it from the "modules In" list. Trivial to add back later (combo + `CAPS_WORD_ENABLE`) if constant-heavy code shows up.
+The top row navigates the application: previous tab, next tab, back, forward.
+This removes mouse work.
 
-**🔒 8i — F1–F12: NOT MAPPED.** Proposed on the Numbers layer's empty top row (straight F1–F12 left-to-right, laptop-style, zero to memorize, zero cost since the row is empty). **User declined for now** — barely uses them, doesn't want the row filled. Numbers-layer top row stays empty and reserved. One-line change to add if an app ever demands one.
+The left keys use the letter as the memory aid: `W` = select **W**ord,
+`E` = select lin**E**, `G` = find (**G**rep), and `Z` `X` `C` `V` `B` keep the
+standard macOS edit positions.
 
-**✅ D8 COMPLETE.** Base layer + Media layer fully specified.
+`SEL` is the Select Word module. `SLN` extends the same module to a full line.
 
-**⚠️ Flagged for the D7 final pass (user's catch):** `?` would have **two homes** — Shift+`/` on Base *and* `Q` on the Symbols layer. Same duplication argument that killed `-`/`=` from the top row. Audit Symbols for other shifted-character duplicates (`!` = Shift+`1`… but digits are gone, so check case by case).
+### Layer 2 — Numbers (hold left `Tab`)
 
-### 🔒 Decision 9 — Mouse layer (Orbital Mouse)
-
-Implements D3's wrist goal literally: **the right half of this layer is entirely blank.** The right hand does not participate in pointing at all.
-
-**Access:** toggle on/off with the `MOU` key (left outer column, row 2 — see 8d). Not a hold: mousing lasts seconds-to-minutes.
-
-**The model (Orbital Mouse, Getreuer).** Not classic mouse keys. The pointer works like **driving a car** — it always has a heading. `FWD`/`BCK` drive along the heading; the left/right keys **steer** (rotate the heading) rather than moving the pointer sideways. Benefit: travel at *any* angle with one key held, instead of 8 fixed directions needing two keys. Confirmed as the user's choice (D3 already locked it).
+The right hand holds a calculator numpad. The left hand holds the operators.
 
 ```
-MOUSE · toggled on/off with MOU              (blank = KC_NO, does nothing)
-
 ┌───┬───┬───┬───┬───┬───┐         ┌───┬───┬───┬───┬───┬───┐
-│   │   │   │   │   │   │         │   │   │   │   │   │   │
+│ × │ × │ × │ × │ × │ × │         │ × │ × │ × │ × │ × │ × │
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
-│   │ ⇑ │FWD│ ⇓ │   │   │         │   │   │   │   │   │   │
+│ × │ + │ − │ * │ / │ = │         │ 7 │ 8 │ 9 │ = │ — │ × │
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
-│OFF│ ↰ │BCK│ ↱ │   │   │         │   │   │   │   │   │   │
+│ × │CMD│OPT│CTL│SFT│ — │         │ 4 │ 5 │ 6 │ENT│ — │ × │
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
-│SLO│   │   │   │   │   │         │   │   │   │   │   │   │
+│ × │ — │ — │ — │ — │ — │         │ 1 │ 2 │ 3 │ . │ — │ × │
 └───┴───┴───┴───┴───┴───┘         └───┴───┴───┴───┴───┴───┘
               ┌───┬───┐               ┌───┬───┐
-              │L-C│R-C│               │   │   │
+              │ — │hold               │BSP│ 0 │
               └───┴───┘               └───┴───┘
 ```
-| Key | Keycode | Job |
+
+`0` is on the right OUTER thumb, in the `Enter` position. `Enter` is already on this
+layer at `L`, in the calculator position, so the thumb copy is not needed. This keeps
+`Backspace` live on the inner thumb, which matters most when you type digits.
+The position also reads like a real numpad, where `0` is the wide key below the digits.
+
+Two `=` keys are intentional. `T` groups it with the operators. `O` puts it in the
+calculator position. The left key would otherwise be empty, and the pair lets you
+type `4+5=` without a hand crossing over.
+
+The left home row keeps the modifiers, so `Cmd+1` to `Cmd+9` still switch tabs
+and desktops.
+
+Nothing else goes on this layer. Hex letters, parentheses and a thousands separator
+were considered and rejected: they add memory load for a rare gain.
+
+### Layer 3 — Symbols (hold right inner thumb)
+
+**Rebuilt after Getreuer's first symbol layer**
+(<https://getreuer.info/posts/keyboards/symbol-layer/>). The original mirrored
+design below it is kept as history at the end of this section.
+
+```
+┌───┬───┬───┬───┬───┬───┐         ┌───┬───┬───┬───┬───┬───┐
+│ × │ × │ × │ × │ × │ × │         │ × │ × │ × │ × │ × │ × │
+├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
+│ × │ ` │ < │ > │ × │ × │         │ & │ × │ [ │ ] │ % │ × │
+├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
+│ × │ ! │ - │ + │ = │ # │         │ | │ : │ ( │ ) │ ? │ × │
+├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
+│ × │ ^ │ / │ * │ _ │ € │         │ ~ │ $ │ { │ } │ @ │ × │
+└───┴───┴───┴───┴───┴───┘         └───┴───┴───┴───┴───┴───┘
+   pnky ring mid  ix  inner        inner  ix  mid ring pnky
+```
+
+Three rules, in the order they matter:
+
+1. **The right hand is brackets, and only brackets.** Middle finger opens, ring
+   finger closes, three pairs stacked: `[]`, `()`, `{}`. One motion learned once
+   covers all three. This replaces the old mirrored scheme, where closing a
+   bracket meant finding its mirror position on the other hand.
+2. **The left hand is operators, rolling inward.** The common bigrams run from a
+   weak finger toward the index: `!=` pinky to index, `+=` and `*=` middle to
+   index, `<=` ring to index, `->` ring to middle.
+3. **Nothing doubled sits on a pinky.** `==`, `++`, `--`, `//`, `**` are all typed
+   twice in a row, so they live on ring, middle and index. Pinkies take the
+   symbols that are never doubled: `` ` ``, `!`, `^`, `&`, `|`, `~`.
+
+The three dead slots held `"`, `.` and a `::` macro in Getreuer's original. The
+first two are on the base layer here and the third is not wanted, so they stay
+dead rather than take invented filler.
+
+`, . / ' ; \\` stay on the base layer. They need no slot here.
+
+A number-order top row (`!@#$%^&*`) was rejected: it spends the best keys on rare
+symbols. Code combination keys (`=>`, `->`, `${}`) were also rejected. Add them later
+if the user wants them.
+
+**Superseded design.** The layer was originally a mirror, with each bracket pair on
+the same finger of opposite hands (`< [ { ( =` against `| ) } ] >`). It was coherent
+but made every bracket pair a two-hand alternation, and the mirror had to be recalled
+rather than felt. Replaced in favour of same-hand rolls.
+
+### Layer 4 — Accents (hold right `Enter`)
+
+The mental model is "Shift, but for accents". Hold the right thumb, tap the vowel,
+release. To type `café`: tap `c` `a` `f`, then hold the thumb and tap `e`.
+
+Hold is correct here, not one-shot. A true one-shot needs its own tap, which cannot
+share the `Enter` thumb without the loss of `Enter`. The cost of the hold is low,
+because the most frequent accents (`á é ç ã`) are all on the LEFT hand, opposite the
+thumb that holds. Only the rarer `í ó ú` are on the same hand.
+
+```
+┌───┬───┬───┬───┬───┬───┐         ┌───┬───┬───┬───┬───┬───┐
+│ × │ × │ × │ × │ × │ × │         │ × │ × │ × │ × │ × │ × │
+├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
+│ × │ â │ — │ é │ — │ — │         │ — │ ú │ í │ ó │ — │ × │
+├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
+│ × │ á │ ã │ ê │ — │ — │         │ — │ — │ ô │ õ │ — │ × │
+├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
+│ × │ à │ — │ ç │ — │ — │         │ — │ — │ — │ — │ — │ × │
+└───┴───┴───┴───┴───┴───┘         └───┴───┴───┴───┴───┴───┘
+```
+
+Three rules and one exception cover the whole layer:
+
+1. **Acute ´ is on the vowel itself.** `á é í ó ú` on `A` `E` `I` `O` `U`.
+2. **Circumflex ^ is on the middle-finger home key.** `ê` on `D`, `ô` on `K`.
+3. **Tilde ~ is on the ring-finger home key.** `ã` on `S`, `õ` on `L`.
+4. **`ç` is on `C`**, its own letter.
+5. **Exception for A.** `A` is on the weak pinky and has no middle home key of its
+   own. So its two extra forms go around it: `à` on `Z` (below `A`) and `â` on `Q`
+   (above `A`). `à` is more frequent, so it gets the easier down key. The `^` of `â`
+   points up, which matches `Q`.
+
+`é í ó ú` are on the top row, because the QWERTY vowels are there. This is acceptable:
+the layer is held and occasional, unlike the old number row. The two right-hand
+variants (`ô` and `õ`) are on the home row, so the sore hand does not stretch up.
+
+**Output method: macOS dead keys, not Unicode.**
+
+The firmware sends the built-in macOS accent combinations. This needs zero macOS
+configuration and works on the default keyboard layout.
+
+Unicode Hex Input was rejected. It takes over the Option key, which would break the
+Option+arrow word jumps on the Nav layer. Dead keys use Option only for a fraction of
+a second.
+
+Capital letters are free: hold Shift and tap the accent key, and macOS composes `Á`.
+
+Known limit: two-step dead keys do not work in Terminal. This is acceptable, because
+the user writes Portuguese in applications. `ç` is a direct combination, so it works
+in Terminal too.
+
+| Char | Send | Char | Send | Char | Send |
+|---|---|---|---|---|---|
+| `á` | ⌥e a | `ê` | ⌥i e | `ó` | ⌥e o |
+| `à` | ⌥\` a | `í` | ⌥e i | `ô` | ⌥i o |
+| `â` | ⌥i a | `ú` | ⌥e u | `õ` | ⌥n o |
+| `ã` | ⌥n a | `é` | ⌥e e | `ç` | ⌥c |
+
+### Layer 5 — Media (hold both left thumbs)
+
+```
+┌───┬───┬───┬───┬───┬───┐         ┌───┬───┬───┬───┬───┬───┐
+│ × │ × │ × │ × │ × │ × │         │ × │ × │ × │ × │ × │ × │  reserved: launchers
+├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
+│ × │RGB│RGB│RGB│RGB│ × │         │ × │ × │ × │ × │ × │ × │  lighting controls
+├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
+│ × │ × │ × │ × │ × │ × │         │ ⏮ │ ⏯ │ ⏭ │ ■ │ × │ × │
+├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
+│ × │ × │ × │ × │ × │ × │         │ 🔉│ 🔇│ 🔊│ × │ × │ × │
+└───┴───┴───┴───┴───┴───┘         └───┴───┴───┴───┴───┴───┘
+```
+
+One idea for each finger, in a stack: the index does previous track and volume down,
+the middle does play/pause and mute, the ring does next track and volume up, and the
+pinky does stop. Transport is directly above volume, on the home row, so the sore hand
+travels the shortest distance.
+
+The stop key is almost useless on macOS, because most applications treat it as
+play/pause. It stays because the user asked for it. Remove it first if the slot
+is needed.
+
+The trigger is a chord of both left thumbs. This costs no key. The thumbs are the
+strongest fingers, they already rest there, and the reach is zero. It reads logically:
+`Space` alone is Nav, `Tab` alone is Numbers, and both together are the third layer.
+
+The left hand holds the lighting controls: RGB on/off, brightness, effect cycle and
+palette cycle. The exact positions are set when `keymap.c` is written.
+
+The top row is reserved for a launcher row. See section 8.
+
+### Layer 6 — Mouse (toggle with `MOU`)
+
+The right half of this layer is empty. The right hand takes no part in pointer control.
+
+The module is Orbital Mouse. It is not a classic mouse-key layer. The pointer works
+like a car: it always has a heading. `FWD` and `BCK` drive along the heading. The
+left and right keys turn the heading, they do not move the pointer sideways. So you
+can travel at any angle with one key held, instead of 8 fixed directions that need
+two keys.
+
+```
+┌───┬───┬───┬───┬───┬───┐         ┌───┬───┬───┬───┬───┬───┐
+│ × │ × │ × │ × │ × │ × │         │ × │ × │ × │ × │ × │ × │
+├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
+│ × │ ⇑ │FWD│ ⇓ │ × │ × │         │ × │ × │ × │ × │ × │ × │
+├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
+│OFF│ ↰ │BCK│ ↱ │ × │ × │         │ × │ × │ × │ × │ × │ × │
+├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
+│SLO│ × │ × │ × │ × │ × │         │ × │ × │ × │ × │ × │ × │
+└───┴───┴───┴───┴───┴───┘         └───┴───┴───┴───┴───┴───┘
+              ┌───┬───┐               ┌───┬───┐
+              │L-C│R-C│               │ × │ × │
+              └───┴───┘               └───┴───┘
+```
+
+| Position | Keycode | Function |
 |---|---|---|
-| `W` / `S` | `OM_U` / `OM_D` | drive forward / reverse |
-| `A` / `D` | `OM_L` / `OM_R` | steer left / steer right (rotate heading) |
-| `Q` / `E` | `OM_W_U` / `OM_W_D` | scroll up / scroll down |
-| outer row 3 (`Esc` position) | `OM_SLOW` | **hold** for slow, precise movement + turning |
-| outer row 2 | `TG(MOUSE)` | `OFF` — same key that turned it on |
-| left thumb 1 (`Space`) | `OM_BTN1` | left click |
-| left thumb 2 (`Tab`) | `OM_BTN2` | right click |
+| `W` / `S` | `OM_U` / `OM_D` | Drive forward / drive backward |
+| `A` / `D` | `OM_L` / `OM_R` | Turn left / turn right |
+| `Q` / `E` | `OM_W_U` / `OM_W_D` | Scroll up / scroll down |
+| Outer row 2 | `TG(MOUSE)` | Turn the layer off |
+| Outer row 3 | `OM_SLOW` | Hold for slow, precise movement |
+| Left thumb 1 | `OM_BTN1` | Left click |
+| Left thumb 2 | `OM_BTN2` | Right click |
 
-**Why this shape (design history — two corrections the user made):**
-1. Assistant first proposed **ESDF** (WASD shifted one finger right) to keep the pinky out and put the index on the `F` home bump. **User preferred literal WASD** — it's already in their hands from the old keymap and from gaming. Existing muscle memory beats ergonomic tidying; memorability is goal #1.
-2. Assistant put `SLOW` on `Q` and scroll on the index column. **User moved scroll to `Q`/`E`** (the classic "extra buttons" flanking WASD) **and `SLOW` to the `Esc` position** — because with a **gaming grip** (ring on `A`, middle on `W`/`S`, index on `D`) the **pinky floats free over the outer column**. This reveals the finger assignment the assistant had wrong; the layout now matches how the hand actually sits.
-- Scroll direction assigned by **frequency, not geometry**: scroll-down is far more common (reading), so it gets `E` (stronger finger) and scroll-up gets `Q`.
-- `OFF` and `SLO` end up stacked in the outer column → the pinky owns both "slow down" and "get out," the two things wanted when the pointer misbehaves.
-- No same-finger conflicts under the gaming grip: `SLOW` (pinky, outer) can be held while ring/middle/index drive and steer.
+The layout matches how the hand actually sits. With a gaming grip the ring finger is
+on `A`, the middle finger is on `W` and `S`, and the index finger is on `D`. The pinky
+floats free over the outer column, so it takes `OFF` and `SLOW`. Those are the two
+things you want when the pointer misbehaves.
 
-**Deliberately NOT in v1:** drag (`OM_HLDS`/`OM_RELS`), double-click (`OM_DBLS`), middle click, button-selection keys (`OM_SEL*`), horizontal scroll. All rare, all would double the layer's size, and the trackball still exists for edge cases. Trivial to add once the basics are habitual.
+The keys are literal `WASD`, not a shifted variant. The user already has `WASD` in
+their hands from games and from the old keymap.
 
-**Implementation notes (from `layout-research/getreuer-qmk-keymap/features/orbital_mouse.h`):**
-- `SRC += features/orbital_mouse.c` and `MOUSE_ENABLE = yes` in `rules.mk`.
-- Call `process_orbital_mouse()` from `process_record_user()` and `orbital_mouse_task()` from `housekeeping_task_user()`.
-- Orbital repurposes the stock Mouse Keys keycodes (`MS_UP`, `MS_BTN1`, …) — so `OM_U` *is* `MS_UP`, just with orbital semantics. Also repurposes `UC(0x41)`–`UC(0x4a)` for its own keycodes.
-- Full docs: <https://getreuer.info/posts/keyboards/orbital-mouse>
+Scroll down is on `E` and scroll up is on `Q`. Scroll down is far more frequent when
+you read, so it gets the stronger finger.
 
-### 🔒 Decision 10 — Consistency pass (pre-build audit)
+These are **not** in version 1: drag (`OM_HLDS` / `OM_RELS`), double click (`OM_DBLS`),
+middle click, button-selection keys (`OM_SEL*`) and horizontal scroll. All are rare,
+all would double the size of the layer, and the trackball is still available. Add them
+after the basic keys become a habit.
 
-**🔒 10a / "8j" — Wispr push-to-talk trigger = `F13`, not `Option+.`**
-User will reconfigure Wispr Flow to listen on `F13` and free up `Option+.` for other use. Firmware sends a plain `F13` **held** for the duration of the key press (`register_code`/`unregister_code`, not `tap_code` — see the implementation note below). Why `F13`: no physical Mac keyboard has it, so it can never collide with an app shortcut or with the Option-based dead-key accent macros (D6). Placement unchanged — left outer column, row 0 (8d).
-- ⚠️ **Implementation gotcha (from research):** a hold-to-talk key must `register_code()` on press and `unregister_code()` on release. Forgetting the release leaves the key stuck down. Also verify it doesn't collide with the home-row-mod / Chordal Hold chording window.
+---
 
-**Stale references cleaned up in this pass:** D1 Caps Word + Wispr lines · D2 thumb table + "12→5" layer count · D3 mouse access method · D6 Fn-demotion line + the Wispr rationale for rejecting Unicode · 8a's two "not yet locked" consequences · the Working Skeleton block · the Open-questions parking lot (resolved items folded in, incl. the dead `F`/`A`/`O`/`S` Shottr plan).
+## 4. Lighting
 
-**🔴 REAL GAPS FOUND — need decisions before `keymap.c` (not yet resolved):**
+**Base layer.** All keys use `HSV 191, 70, 231`, a soft lavender-purple. This is the
+signature colour of the current keymap.
 
-1. **`_` (underscore) has NO home anywhere.** The Symbols layer (D7) replaces the entire home row with containers, so **there is no Shift key on the Symbols layer** — meaning `Shift`+`-` is impossible there, and `-` only exists there. Underscore is common in JS/TS and file names. **Needs a slot on Symbols.**
-2. **Duplicate homes** — the same "one key, one home" rule that killed `-`/`=` from the Base top row (8b) is violated by several Symbols keys, because Base still supplies their unshifted partner:
-   - `?` = Shift+`/` on Base **and** `Q` on Symbols *(user spotted this one)*
-   - `:` = Shift+`;` on Base **and** the right-hand `:` on Symbols
-   - `<` `>` = Shift+`,` / Shift+`.` on Base **and** the outer pinkies on Symbols
-   - `+` = Shift+`=` **and** its own key on Symbols (`=` is also on Symbols, so both live on the same layer)
-   - `~` = Shift+`` ` `` **and** its own key on Symbols (same layer again)
-   - **✅ RESOLVED — keep all of them; no change.** The `-`/`=` precedent does **not** apply. Those were *unshifted* duplicates on a bad-reach row. These are different:
-     - Shift+`/`→`?`, Shift+`;`→`:`, Shift+`,`→`<` etc. are **unavoidable** — they exist for free the moment `/ ; , .` live on Base. You can't "remove" them without removing the letters.
-     - The Symbols copies are **cheaper** (one key vs. Shift+key), so they earn their slot rather than duplicating it.
-     - `<` `>` are **load-bearing**: they complete the mirrored container row `< [ { ( = │ | ) } ] >`, which is the entire mnemonic of D7. Removing them to save a duplicate would break the one rule that makes the layer memorable.
-     - `+` and `~` **must** stay on Symbols: there is no Shift key on that layer, so `Shift`+`=` and ``Shift+` `` are impossible there. (Same root cause as the `_` gap.)
-3. **✅ RESOLVED — `=` twice on Numbers is intentional.** Not a slip; the left key would otherwise be empty and the duplicate lets you type `4+5=` one-handed. See D5.
-4. **✅ RESOLVED — `0` goes on the right OUTER thumb** (`Enter` position), keeping `Backspace` live on the inner thumb. See D5.
-5. **🔒 RESOLVED — outer columns are `KC_NO` (dead) on Nav, Numbers, Symbols and Accents.**
-   The problem: those layers left the outer columns transparent, so while holding a layer the four left-pinky keys were still **Wispr / Hyper / Mouse / Esc**. Brushing Wispr, Hyper or Esc is harmless — but **`MOU` is a toggle**, so a stray hit silently switches the board into mouse mode with no obvious cause and no auto-recovery. The Accents layer is the worst case: `à`→Z, `â`→Q and `á`→A all sit right next to that column.
-   - **Dead on:** Nav · Numbers · Symbols · Accents. Nothing is lost — there is no reason to fire Wispr or toggle the mouse mid-symbol or mid-accent.
-   - **Still live on:** Base (obviously) and Mouse (where the column holds `OFF` and `SLO` deliberately).
-   - Also worth applying the same thinking to the **Base top row** on held layers, so Shottr can't fire mid-symbol.
-6. **🔒 RESOLVED — `Esc`'s two homes are fine, keep both.** Dedicated Base key (8d) plus Nav-layer `Q` (D4). Not a duplicate in the harmful sense: the Base one is the reflex, the Nav one is free real estate on a key that would otherwise be empty. Costs nothing.
+**All other layers.** Light only the live keys. Set every dead key to `0,0,0`. Give
+each layer its own hue, so the colour alone identifies the layer.
 
-**✅ D10 COMPLETE — all six gaps resolved.**
+This makes the board its own reference card. Hold `Space` and only the Nav keys glow.
+Hold `Tab` and only the numpad glows. This is the single most useful feature in the
+build for the memory problem, which is goal number 1.
 
-### 🔒 Decision 11 — RGB / lighting
+This is **not** a module. No Getreuer feature provides it. It is a hand-written
+`rgb_matrix_indicators_user()`.
 
-**🔒 11a — Base layer = the user's signature colour, unchanged.** `HSV 191, 70, 231` (soft lavender-purple) — read from the old `ledmap[0]`. All keys lit, as today.
+**Amended at implementation time.** The plan was a per-layer `ledmap` array, like
+the old keymap. The firmware instead reads the live keys back out of `keymaps[]`
+at draw time: a key lights if its keycode on the active layer is neither `KC_NO`
+nor `KC_TRNS`. This is the same result in fewer lines, and it removes the failure
+mode where a key moves but its colour does not. Each layer therefore only needs
+one hue, not a 52-entry table. The base layer is the exception and lights every
+key in the signature lavender.
 
-**🔒 11b — Every other layer: only LIVE keys are lit; inactive keys are OFF (`0,0,0`).**
-This is the **layer-cheatsheet-in-hardware** pattern and it's the single highest-leverage memorability feature in the whole build — the board becomes the reference card, so there's no chart or overlay to consult. Hold `Space` → only the Nav keys glow. Hold `Tab` → only the numpad glows.
-- Precedent: the user's **own** old `ledmap[5]` and `ledmap[6]` already do exactly this (dead keys set to `{0,0,0}`) — the instinct is already in their keymap.
-- Give each layer a distinct hue so the colour alone identifies the layer.
-- ⚠️ **Research correction:** this is **NOT** something PaletteFx or any Getreuer module provides. It's a hand-rolled `rgb_matrix_indicators_user()` (or per-layer `ledmap` as the old keymap does), ~50–100 lines. Standard QMK RGB Matrix pattern; DIY but well-trodden.
+**The two cannot show at once.** Per-layer lighting repaints every LED on every
+frame, so it covers whatever RGB effect is running. ZSA's `TOGGLE_LAYER_COLOR`
+switches between them and sits on the Media layer at `T`. Layer colours on is the
+teaching mode and the default; layer colours off reveals PaletteFx. The setting
+does not survive a reboot, because ZSA's handler never writes it to EEPROM.
 
-**🔒 11c — PaletteFx: ADOPTED, for looks only.** User: *"looks cool af, it's not about the functional side."* Recorded explicitly so nobody later "corrects" this into a functional decision — it is an aesthetic choice, made with full knowledge that it does **not** do layer teaching (6 animated effects × 16 palettes, global, not layer-aware; Getreuer himself uses only a single binary status LED). Coexists fine with 11b.
+**PaletteFx** is adopted for appearance only. The user said: "looks cool af, it's not
+about the functional side." It has 6 animated effects and 16 palettes. It is global
+and it is not layer-aware, so it does not teach layers. Do not later "correct" this
+into a functional decision. It works together with the per-layer lighting above.
 
-**🔒 11d — Lighting controls live on the MEDIA layer.** User's idea. The Media layer's empty left hand / top row hosts RGB toggle, brightness, effect-cycle and palette-cycle keys. Exact placement TBD when we write `keymap.c` — the space is reserved.
+---
 
-**Repeat Key — PARKED (not rejected).** One key that repeats the last keypress; **Alternate Repeat** does the complementary action (Page Down → Page Up). Genuinely a right-hand-load reducer *if* placed on the left hand. **Blocked on placement:** the left hand has no free comfortable key (outer column full, alphas are letters, both thumbs assigned) and a repeat key you have to reach for won't get used. Revisit if the app-shortcut audit frees a good slot. Use QMK **core** Repeat Key, not the legacy `features/` copy; call it after Chordal Hold in `process_record_user()`.
+## 5. Modules and firmware features
 
-**🔒 Underscore resolved (D10 gap #1) — assistant's call, user deferred ("idk"), trivially reversible.**
-`_` takes the `E` slot on the Symbols top row (where `&` was); `&` moves to the bottom-right rare cluster alongside `~ ^ % *`. Rationale: identifiers and filenames beat `&&` in volume, and the rares cluster is exactly the "one findable home for things I rarely need" shelf D7 already established.
-```
-SYMBOLS · revised rows
-│ — │ ? │ ! │ _ │ - │ + │      ← operators (was `&` on E)
-│ — │ — │ @ │ # │ $ │ € │         │ ~ │ ^ │ % │ * │ & │ — │   ← `&` joins the rares
-```
-
-## Pending tasks (FUTURE sessions — not this one)
-- **Portuguese / Accent layer — DONE, see Decision 6.** (Superseded this pending note: full vowel map + hold-Enter trigger + macOS dead-key output all locked.) Remaining optional extras (`« »`, `º ª`, `– —`, `" "`) + Ç-extension tracked under D6.
-- **App-shortcut audit + consolidation.** Inventory hotkeys across all main apps, resolve conflicts, mirror the important ones into the keymap as single mnemonic keys, and record the full map here (this file = registry). Apps to cover: Shottr (done), **Wispr Flow** (dictation; currently `Option+,`/`Option+.` push-to-talk — confirm exact trigger), **browser** (Arc/Chrome/Dia?), **Herd**, Raycast/Alfred, window manager, Karabiner (if any), macOS system shortcuts, clavier.app. Strategy: Hyper namespace for global hotkeys + firmware single-key mirrors + overlay as live view.
-- **Layer-cheatsheet overlay** (Deliverable 2) — build after keymap; Keymapp is flaky here (code, not Oryx).
-
-## Working skeleton (CURRENT — 7 layers)
-```
-0 Base
-1 Nav      = hold LEFT Space
-2 Numbers  = hold LEFT Tab
-3 Symbols  = hold RIGHT Backspace
-4 Accents  = hold RIGHT Enter
-5 Media    = hold BOTH LEFT thumbs (Space + Tab)
-6 Mouse    = toggle, MOU key (left outer column, row 2) → Orbital Mouse
-```
-
-## Open questions / parking lot
-**✅ Resolved (kept for history):** home-row mod order → D1 · layer set + thumb scheme → D2/D8 · number layer geometry → D5 · Nav layer → D4 · Symbol layer → D7 · Portuguese method → D6 · fate of `=`/`+` → 8b (removed from Base) · base top-row design → 8a · freed-key inventory → 8a/8d/8f · Layer Lock + back-to-Base → 8c/8e (both dropped) · Shottr placement → 8a (**supersedes** the old `F`/`A`/`O`/`S`-on-Fn-layer plan; it's now Hyper+1/2/3 on the physical `1`/`2`/`3` keys).
-
-**Still open:**
-- **App-shortcut conflicts / global control:** make the keyboard the single source of truth for app shortcuts so per-app shortcuts stop colliding. Own topic, after foundation.
-- **Principle — modifier+symbol shortcuts:** combos like `Cmd+[`, `Cmd+/`, `Ctrl+[` are painful when the symbol lives on a *held* layer. Bake each frequent one as a **single-key macro** on the relevant layer (Nav already does this: back/fwd = `Cmd+[`/`]`). Collect the user's actual list.
-- macOS Cmd+C/V/X/Z are same-hand chords (Cmd on left pinky `A`). Possible later tweak: Cmd on a thumb or a combo.
-- Getreuer/community modules to adopt + ordering — **in progress, see the modules section**.
-- **Shottr `Hyper+5`** (scrolling capture) still unmapped — 8a mapped only 1/2/3.
-
-## 🔒 Decision 12 — Modules (FINAL)
-
-**IN:**
-| Module | Form | Note |
+| Module | Form | Use |
 |---|---|---|
-| Chordal Hold | QMK **core** | anti-misfire for home-row mods. Use core, **not** Getreuer's older `achordion.c` (superseded, QMK 0.28.0) |
-| Permissive Hold | QMK **core** | with the above |
-| Select Word | Getreuer module | Nav layer `W` (D4) |
-| Orbital Mouse | Getreuer `features/` | Mouse layer (D9) |
-| **Autocorrect** | QMK **core** | user wants it. `qmk generate-autocorrect-data` |
-| **PaletteFx** | Getreuer module | **aesthetic only** — see 11c |
-| Layer-cheatsheet RGB | **DIY** | not a module; see 11b. Highest-leverage item for memorability |
+| Achordion | Getreuer `features/` | Prevents home row mod misfires. |
+| Permissive Hold | QMK core | Used with Achordion. |
+| Select Word | Getreuer `features/` | Nav layer `W` and `E`. |
+| Orbital Mouse | Getreuer `features/` | Mouse layer. |
+| Autocorrect | QMK core | `qmk generate-autocorrect-data`. |
+| PaletteFx | Getreuer `features/` | Appearance only. |
+| Per-layer lighting | Hand-written | See section 4. |
 
-**Autocorrect × Portuguese — researched, LOW RISK.** It is an **opt-in whitelist** of `typo → correction` pairs you supply, *not* a live English spellchecker. It cannot correct a word it was never taught. It's also scoped to a–z + apostrophes, so accented PT words are simply out of scope and pass through untouched. Start from the small (~71-entry) example dictionary, not the 400-entry one, and use `:word:` boundary markers to avoid substring false-positives. Any held modifier other than Shift resets the buffer, so it won't fight vim normal mode.
+**Amended at implementation time.** This plan called for core Chordal Hold and the
+QMK Community Modules form. Neither is available: `qmk/qmk_zsa_voyager` is ZSA's
+`firmware23` branch, a fork of QMK from June 2024, which predates Chordal Hold
+(QMK 0.28.0) and module support. So Getreuer's `achordion.c` is used instead, and
+every feature is vendored as a copy under `f.qwerty/features/` with `SRC +=` lines
+in `rules.mk`.
 
-**OUT (all user decisions):**
-- **Caps Word** — dropped in 8h (rarely writes SCREAMING_CASE).
-- **Layer Lock** — dropped in 8e (the design already avoids the pain it solves).
-- **Sentence Case** — user declined. (It auto-caps after `. `; the failure mode is Portuguese abbreviations — `Sr.` `Dr.` `Av.` — falsely triggering, needing a hand-maintained exception list.)
-- **Custom Shift Keys** — user declined. Every entry is another exception to remember; only worth it for a specific known annoyance, and there isn't one.
-- **Repeat Key** — PARKED, not rejected. See D11: good feature, no good key.
+Revisit both decisions if ZSA rebases the fork. Nothing else in this document
+depends on the choice — Achordion and Chordal Hold solve the same problem the
+same way.
 
-**Also evaluated and skipped for this user** (research): Leader Key (sequence memorization — wrong for a memorability-first noob; use Raycast/Espanso snippets for text expansion instead) · Dynamic Macros (no persistence across reboot) · Callum-style one-shot mods (redundant with home-row mods + Chordal Hold) · Tap Dance (the "what does N taps do" problem the redesign exists to escape) · SOCD Cleaner (gaming only) · Mouse Turbo Click (superseded by Orbital Mouse).
+`config.h` also carries compat shims for names QMK introduced after the fork:
+the `MS_*` mouse keycodes, the `hsv_t` / `rgb_t` colour types, and
+`MODIFIER_KEYCODE_RANGE`. Delete them when the fork moves forward.
 
-**Backlog / notable:**
-- **Flow Tap** (QMK core; was Getreuer's "Tap Flow") — reduces mod-tap misfires during fast typing rolls. Only reach for it if accidental-mods show up after flashing.
-- **QMK Community Modules** (core, since 0.28.0, Feb 2025) — the `git submodule` mechanism that makes Getreuer's modules near-zero-glue via `keymap.json`. Prefer the `modules/` form over hand-copying `features/*.c` so upstream fixes come free.
-- Other module collections exist (tzarc, drashna, elpekenin, silvinor) — nothing in them beat the list above for this profile.
-- **EurKey** — Getreuer's own recommendation for EN+PT on macOS, and it would cut keystrokes vs. dead keys. **Not adopted:** D6 deliberately chose dead keys for *zero macOS config*, and EurKey requires changing the system input source. Parked as a genuine alternative if the dead-key approach chafes.
+Achordion is configured to allow **same-hand layer taps**. The default rule only
+holds a tap-hold key when the other key is on the opposite hand, which would break
+the Nav and Numbers layers: the left thumb holds both, and the left half of both
+layers is full of live keys. Home row mod-taps keep the opposite-hands rule.
+
+`features/select_word.c` has one local patch: a `SELECT_LINE_KEYCODE`, so `SLN`
+can be its own key rather than Shift plus `SEL`. Upstream only reaches line
+selection through Shift, and the state that makes repeat presses extend the
+selection is file-private.
+
+**Autocorrect and Portuguese.** The risk is low. Autocorrect is a whitelist of
+typo-to-correction pairs that you supply. It is not a live English spellchecker, and
+it cannot correct a word that it was never taught. Its scope is a–z plus the
+apostrophe, so accented Portuguese words pass through untouched. Start from the small
+example dictionary of about 71 entries, not the 400-entry one. Use the `:word:`
+boundary markers, to prevent false matches inside longer words. Any held modifier
+except Shift clears the buffer, so it does not interfere with vim normal mode.
+
+---
+
+## 6. Implementation notes
+
+Build commands are in `f.qwerty/CLAUDE.md`.
+
+**Home row mods.** Set the tapping term to about 200 ms and tune it on the hardware.
+Delete the old `get_tapping_term()` special cases for `KC_J` and `KC_K`. They belong
+to a previous setup.
+
+**Media trigger.** Use the standard tri-layer pattern:
+`update_tri_layer_state(state, NAV, NUM, MEDIA)` in `layer_state_set_user()`.
+
+**Wispr key.** Use `register_code(KC_F13)` on press and `unregister_code(KC_F13)` on
+release. Do not use `tap_code`: the key must stay down while the user speaks. If you
+forget the release, the key stays down forever. Also confirm that the key does not
+interfere with the Chordal Hold timing window.
+
+`F13` is used because no physical Mac keyboard has that key. So it cannot collide with
+an application shortcut or with the Option-based accent macros. Configure Wispr Flow
+to listen on `F13`.
+
+**Accent keys.** Each key is a small macro, for example `SS_LOPT("e") "a"`. See the
+table in the Accents section. `€` uses the same mechanism: ⌥⇧2.
+
+**Orbital Mouse.**
+
+- Add `SRC += features/orbital_mouse.c` and `MOUSE_ENABLE = yes` to `rules.mk`.
+- Call `process_orbital_mouse()` from `process_record_user()`.
+- Call `orbital_mouse_task()` from `housekeeping_task_user()`.
+- Orbital Mouse reuses the stock mouse keycodes. `OM_U` **is** `MS_UP`, with different
+  behaviour. It also reuses `UC(0x41)` to `UC(0x4a)`.
+- Documentation: <https://getreuer.info/posts/keyboards/orbital-mouse>
+
+**Dead outer columns.** The outer columns are `KC_NO` on Nav, Numbers, Symbols and
+Accents. If they stay transparent, the four left pinky keys are still Wispr, Hyper,
+Mouse and Escape while you hold a layer. Wispr, Hyper and Escape are harmless, but
+`MOU` is a **toggle**: one stray press puts the board into mouse mode, with no obvious
+cause and no automatic recovery. The Accents layer is the worst case, because `à` (Z),
+`â` (Q) and `á` (A) are all next to that column.
+
+The outer columns stay live on Base and on Mouse, where they hold `OFF` and `SLOW`.
+
+**Old code to delete.** The tap dance `TD(DANCE_0)` on the bottom right is dead. It
+was a single tap of `Option+E` and a double tap to layer 7. The accent method replaces
+the first, and layer 7 no longer exists.
+
+---
+
+## 7. Design rules
+
+Apply these rules to any future change.
+
+1. **One key, one home.** A key that can move has one place. This killed `-` and `=`
+   on the base top row.
+   - Exception: a shifted character that the base layer produces for free is not a
+     duplicate. `Shift+/` gives `?` the moment `/` lives on the base layer, and you
+     cannot remove it without the removal of the letter. The Symbols copy is cheaper
+     to press, so it earns its slot.
+   - `+` and `~` **must** stay on the Symbols layer. That layer has no Shift key, so
+     `Shift+=` and ``Shift+` `` are impossible there. `_` is on the layer for the same
+     reason.
+2. **Hold a layer with the hand opposite to its content.**
+3. **Keep frequent keys off the top row.**
+4. **Reduce the load on the right hand.** This applies to keys that you press often.
+   Rare keys on the right side are free.
+5. **Prefer an obvious position over a fast one.** Memory is the constraint.
+6. **Release the thumb to return to Base.** Every layer is momentary, so `MO` and `LT`
+   already do this. A `TO(0)` key is unnecessary.
+7. **Chords are acceptable.** Do not treat "the user cannot remember chords" as a
+   constraint. It was never their position.
+8. **Existing muscle memory beats theory.** Keep `WASD`, Escape on the bottom outer
+   key, and Cmd on `A`.
+
+---
+
+## 8. Open items
+
+- **Application-shortcut audit.** Inventory the hotkeys of every main application,
+  resolve the conflicts, and mirror the important ones into the keymap as single keys.
+  Record the result in this file. Applications: Shottr (done), Wispr Flow, the browser,
+  Herd, Raycast, the window manager, Karabiner, macOS itself, clavier.app.
+  The 9 free base top-row slots and the 2 free right outer keys are reserved for this.
+- **Launcher row.** The top row of the Media layer sends `F13` to `F20` to Raycast,
+  which then runs scripts. A keyboard can only send keystrokes; it cannot run a script
+  by itself. `F13` to `F20` are safe, because no physical Mac keyboard has them.
+- **Single-key macros for modifier plus symbol.** Combinations such as `Cmd+[` and
+  `Cmd+/` are painful when the symbol lives on a held layer. Make each frequent one a
+  single key on the relevant layer. The Nav layer already does this for back and
+  forward. Collect the real list from the user.
+- ~~**Layer-cheatsheet overlay.**~~ Solved by **Probe** (`/Users/f/Core/dev/clones/probe`),
+  a native macOS HUD that reads Raw HID telemetry from the Voyager and renders the live
+  layer. It needs `ORYX_ENABLE = yes`, which `rules.mk` already sets. Probe labels keys
+  from an imported copy of `keymap.c`, so `scripts/sync-probe.sh` pushes both the keymap
+  and `f.qwerty/probe-labels.json` after every flash. Close ZSA Keymapp before using it —
+  both claim the same Raw HID interface and only one gets it.
+- **Cmd chords.** `Cmd+C`, `Cmd+V`, `Cmd+X` and `Cmd+Z` are same-hand chords, because
+  Cmd is on the left pinky. A later option is Cmd on a thumb or a combo.
+- **Shottr `Hyper+5`** (scrolling capture) is not mapped.
+- **Accent layer extras.** `« »`, `€`, `º ª`, `– —` and `" "` are all Option
+  combinations. Add them to the layer if the user wants them.
+- **Alternative alphabet layout.** A hand-balanced layout such as Colemak-DH is more
+  justified than before, because of the wrist. Revisit only if the wrist stays sore
+  after this foundation.
+
+**Check after the first flash.** These decisions are expected to change by feel:
+
+- The tapping term.
+- `-` on the Symbols layer. It is frequent (hyphens, kebab-case, `--flags`) and it now
+  costs a right thumb hold on the sore hand. The key itself is on the left index, so
+  the hold is light, but confirm with real typing.
+- The accent positions.
+- The Symbols positions.
+- **Layer Lock.** It is dropped for version 1, because this design already avoids the
+  pain that it solves: the holding thumb never fights the typing hand. Add it if the
+  user thinks "I have held Tab for a long time" during long runs of digits. It must go
+  on the RIGHT hand, because the left thumb is busy. Use the standard pattern:
+  `QK_LAYER_LOCK` on Base and `KC_TRNS` on every other layer.
+- **Repeat Key.** It repeats the last keypress, and Alternate Repeat does the opposite
+  action (Page Down becomes Page Up). It would reduce right-hand load if it sits on
+  the left hand. It is blocked on placement: the left hand has no free comfortable key.
+  Revisit if the shortcut audit frees a good slot. Use the QMK core version, not the
+  older `features/` copy, and call it after Chordal Hold.
+
+---
+
+## 9. Rejected
+
+Do not propose these again without a new reason.
+
+| Item | Reason |
+|---|---|
+| Caps Word | The user rarely writes SCREAMING_CASE, so it would never fire. |
+| Sentence Case | Portuguese abbreviations (`Sr.`, `Dr.`, `Av.`) trigger it falsely. It needs a hand-maintained exception list. |
+| Custom Shift Keys | Each entry is one more exception to remember, and there is no specific annoyance to fix. |
+| F1–F12 | The user barely uses them. They would fill a free row tidily but not usefully. |
+| A "back to Base" key | Releasing the thumb already returns to Base. |
+| Leader Key | It needs sequence memorization, which is wrong when memory is the problem. Use Raycast or Espanso for text expansion. |
+| Dynamic Macros | They do not survive a reboot. |
+| Callum-style one-shot mods | Redundant with home row mods and Chordal Hold. |
+| Tap Dance | "What does N taps do" is the exact problem that this redesign removes. |
+| SOCD Cleaner | For games only. |
+| Mouse Turbo Click | Orbital Mouse replaces it. |
+| EurKey | It would cut keystrokes for English plus Portuguese, but it needs a change of the system input source. The accent layer deliberately needs zero macOS configuration. |
+| romak Ç-extension | `ç` becomes a one-shot that gives `ã`, `õ` and the `-ão` / `-ões` word macros. High effort and very specific. Revisit only on request. |
+| Flow Tap | Reduces mod-tap misfires during fast rolls. Only add it if accidental mods appear after the flash. |
+
+**Old layers to archive.** Done. The League of Legends layers (old 9, 10, 11), the
+layer switcher (old 7) and the chat-flow keycodes are in `f.qwerty/archive/league.md`.
+
+**Keyboard Maestro cleanup.** The "Select a word" and "Select a line" macros are
+replaced by the firmware Select Word module. Delete them after the firmware works.
+The `;` browser leader key is a separate ccstone multi-press template and is unrelated
+to Portuguese. Keep or disable it freely.
+
+---
+
+## 10. Deliverables and rendering
+
+1. ~~`f.qwerty/keymap.c`, built to this specification.~~ Done, compiles clean.
+   Not yet flashed or typed on.
+2. The layer-cheatsheet overlay (section 8). Still open.
+
+`keymap.c` is now the truth. Generate the pretty renders from the firmware:
+
+```bash
+qmk c2json keymap.c > keymap.json
+```
+
+Then use [keymap-drawer](https://caksoylar.github.io/keymap-drawer) to produce an SVG.
+It handles the Voyager physical layout, hold-tap keys and combos. Use the SVG in the
+README and as the base for the overlay.
