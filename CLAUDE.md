@@ -1,5 +1,10 @@
 # CLAUDE.md
 
+## Git
+
+Commit straight to `main`. Do not create a branch for keymap changes — this is a
+single-user config repo and a branch adds a merge step for no review benefit.
+
 ## Build
 
 ```bash
