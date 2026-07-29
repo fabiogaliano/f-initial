@@ -4,7 +4,7 @@ This document specifies the keymap for the ZSA Voyager and records why each
 decision was made. `keymap.c` now exists and is built, so **`keymap.c` is the
 source of truth**; this document is the rationale behind it.
 
-The keymap has 6 layers. All keys are assigned.
+The keymap has 7 layers. All keys are assigned; Mouse remains deliberately unreachable.
 
 Two things were amended when the firmware was written, both because ZSA's QMK
 fork is older than this plan assumed: see the note in section 5 (Achordion in
@@ -17,7 +17,7 @@ Two things were amended after living with the board:
 did not feel intuitive in use. Layer 6, the `MOU` toggle, `MOUSEKEY_ENABLE`, the
 `features/orbital_mouse.*` files and the `MS_*` compat shims are all gone; section
 3's Layer 6 and the Mouse parts of sections 5, 6 and 8 are kept below as history
-only. The left outer row 2 key is now `KC_NO` and is free for a new function.
+only. The left outer row 2 key is now dedicated to Clavier instead of Mouse.
 
 **Then the pre-redesign mouse layer was restored** from commit `53880a7`, using plain
 `KC_MS_*` keycodes: 8-direction steering on the left hand, clicks on the left thumbs,
@@ -113,6 +113,7 @@ the physical `T` position, not the character that the key sends.
 | 3 | Symbols | Hold right inner thumb (`Backspace`) |
 | 4 | Accents | Hold right outer thumb (`Space`) |
 | 5 | Media | Hold both left thumbs (`Enter` + `Tab`) |
+| 6 | Mouse | Unreachable |
 
 The layer headings further down still name the pre-swap tap letters. Read them by
 thumb position: Nav and Numbers are the left thumbs, Symbols and Accents the right.
@@ -128,7 +129,7 @@ fight the typing hand.
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
 │HYP│ Q │ W │ E │ R │ T │         │ Y │ U │ I │ O │ P │ \ │
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
-│MOU│ A │ S │ D │ F │ G │         │ H │ J │ K │ L │ ; │ ' │
+│CLV│ A │ S │ D │ F │ G │         │ H │ J │ K │ L │ ; │ ' │
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
 │ESC│ Z │ X │ C │ V │ B │         │ N │ M │ , │ . │ / │ × │
 └───┴───┴───┴───┴───┴───┘         └───┴───┴───┴───┴───┴───┘
@@ -141,22 +142,43 @@ fight the typing hand.
 
 **Home row mods**
 
-| Key | Mod | Key | Mod |
-|---|---|---|---|
-| `A` | Cmd ⌘ | `H` | plain |
-| `S` | Option ⌥ | `J` | Ctrl |
-| `D` | Ctrl | `K` | Option ⌥ |
-| `F` | **Shift** | `L` | **Shift** |
+The user rests on `A`-`S`-`D`-`F` and `H`-`J`-`K`-`L`. The right hand therefore
+sits one column inward from the usual `J`-`K`-`L`-`;`, and every placement below
+follows from that. Note that this document elsewhere labels the right home row
+with standard fingering, where `L` is the ring finger; under this rest position
+`L` is the pinky.
 
-The user rests the index finger on `H`, in vim style. So `H` stays plain: it is the
-most frequent letter on that hand and it is also the left arrow on the Nav layer.
+| Finger | Left | Mod | Right | Mod |
+|---|---|---|---|---|
+| pinky | `A` | Cmd ⌘ | `L` | Cmd ⌘ |
+| ring | `S` | Option ⌥ | `K` | Option ⌥ |
+| middle | `D` | Ctrl | `J` | Ctrl |
+| index | `F` | **Shift** | `H` | **Shift** |
 
-Shift is held longer than the other mods, so it goes on the comfortable fingers:
-the left index (`F`) and the right pinky (`L`). The middle and ring fingers are
-uncomfortable to hold, so they get Option and Ctrl, which are held briefly.
-Shift is asymmetric, but both keys capitalize letters that are typed by the other hand.
+A finger-for-finger mirror. Read straight across the board it is a palindrome:
+Cmd Opt Ctrl Shift │ Shift Ctrl Opt Cmd. One rule covers both hands.
 
-Cmd is on the left pinky (`A`) only. This keeps a habit that the user likes.
+The mirror is taken across the *fingers*, not across the two halves. A physical
+mirror would pair `A` with `;` and `F` with `J`, which is wrong here because the
+right hand is shifted inward — `;` sits outside the rest position entirely and
+stays a plain key.
+
+Shift is on the index because it is the most-used modifier and the index is the
+strongest finger. It also means an inward roll can never end on a held Shift, so
+fast rolls cannot produce stray capitals. Cmd, the most-used modifier after Shift
+on macOS, is on the pinky to keep the existing left-hand habit; the weak middle
+and ring fingers get Ctrl and Option, which are held only briefly.
+
+`H` carries Shift despite being the most frequent letter on that hand and the
+left arrow on the Nav layer. Tapped it is still `h`, and `get_quick_tap_term`
+returns 120 ms for it so that tap-then-hold autorepeats `h` for vim motion
+instead of firing Shift. A cold hold is still Shift.
+
+**Superseded.** `H` was previously plain, with Shift on `L` and no right-hand
+Cmd at all. That left every `Cmd`+left-letter chord on one hand — `Cmd+A` was
+not typeable at all, since Cmd lived on `A` — which is why the Nav layer carries
+`NAV_UND`/`CUT`/`CPY`/`PST`/`ALL`. Those are now a convenience rather than the
+only way to reach those shortcuts.
 
 **Top row**
 
@@ -183,15 +205,14 @@ The digits are otherwise gone from Base; `5`-`0` live on the Numbers layer.
 |---|---|---|
 | 0 | `WSP` | Wispr Flow push-to-talk. Sends `F13`, held. |
 | 1 | `HYP` | Hyper (`KC_HYPR`). Used for Shottr and global hotkeys. |
-| 2 | — | Was `MOU`, the Mouse layer toggle. Now `KC_NO` and free. |
+| 2 | `CLV` | Clavier. Sends `F17` on release after a 60 ms press. |
 | 3 | `ESC` | Escape. Plain key, no hold function. |
 
 Row 2 is the best key in the column, because the pinky slides sideways with no
-up or down stretch. So it gets the highest-value function: the Mouse layer.
-The Mouse layer removes work from the right wrist, which is the main medical goal.
-
-The Mouse key toggles. Pointer work lasts seconds to minutes, and a pinky cannot
-hold that long.
+up or down stretch. It opens Clavier hint mode with `F17`. A short brush under
+60 ms sends nothing, preventing an outward pinky roll off Cmd from opening it.
+The function key is emitted on release, which is acceptable because Clavier
+starts when macOS receives its key-down event.
 
 Wispr is on row 0. The distance does not matter, because the key is held: the user
 reaches once, keeps the finger there, speaks, and releases.
@@ -219,7 +240,7 @@ jump. No extra keys are needed for those.
 
 ```
 ┌───┬───┬───┬───┬───┬───┐         ┌───┬───┬───┬───┬───┬───┐
-│ × │ × │ × │ × │ × │ × │         │ × │ × │ × │ × │ × │ × │
+│ × │S1 │S2 │S3 │SCR│ × │         │ × │ × │ × │ × │ × │ × │
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
 │ × │ESC│SEL│SLN│RDO│ — │         │TB←│TB→│BCK│FWD│ — │ × │
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
@@ -232,7 +253,8 @@ jump. No extra keys are needed for those.
 The right hand has 3 tiers. The bottom row holds the extreme of the arrow above it:
 `Home` under `←`, `Page Down` under `↓`, `Page Up` under `↑`, `End` under `→`.
 
-The top row navigates the application: previous tab, next tab, back, forward.
+The top row holds the three Shottr captures and `F18` for Clavier scroll mode;
+the next row navigates the application: previous tab, next tab, back, forward.
 This removes mouse work.
 
 The left keys use the letter as the memory aid: `W` = select **W**ord,

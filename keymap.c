@@ -18,6 +18,7 @@ enum layers {
 // for TOGGLE_LAYER_COLOR and LED_LEVEL.
 enum custom_keycodes {
   WISPR = ML_SAFE_RANGE,  // Wispr Flow push-to-talk: F13, held while the key is.
+  CLAVIER,
   SELWORD,
   SELLINE,
   // Portuguese accents via macOS dead keys.
@@ -38,15 +39,25 @@ enum custom_keycodes {
 uint16_t SELECT_WORD_KEYCODE = SELWORD;
 uint16_t SELECT_LINE_KEYCODE = SELLINE;
 
-// Home row mods. Shift sits on the index (F) and pinky (L) because it is held
-// longest; the weaker middle and ring fingers get the briefly-held mods.
+// Home row mods, mirrored finger for finger. The right hand rests on H-J-K-L,
+// one column inward from the usual J-K-L-semicolon, so the mirror is taken
+// across the fingers rather than across the physical halves:
+//
+//   pinky ring mid index │ index mid ring pinky
+//     A    S    D    F   │   H    J    K    L
+//    Cmd  Opt  Ctrl Shft │  Shft Ctrl Opt  Cmd
+//
+// Strongest finger carries the most-used modifier on both hands, weakest the
+// least-used. Shift on the index also means an inward roll can never end on a
+// held Shift, so fast rolls cannot produce stray capitals.
 #define HM_A MT(MOD_LGUI, KC_A)
 #define HM_S MT(MOD_LALT, KC_S)
 #define HM_D MT(MOD_LCTL, KC_D)
 #define HM_F MT(MOD_LSFT, KC_F)
+#define HM_H MT(MOD_RSFT, KC_H)
 #define HM_J MT(MOD_RCTL, KC_J)
 #define HM_K MT(MOD_RALT, KC_K)
-#define HM_L MT(MOD_RSFT, KC_L)
+#define HM_L MT(MOD_RGUI, KC_L)
 
 // The tapped letters sit where the old layout had them: Space on the right
 // inner thumb, Enter on the left inner, Tab on the left outer. The layers do
@@ -82,13 +93,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [BASE] = LAYOUT_voyager(
     WISPR,          KC_1,           KC_2,           KC_3,           KC_4,           KC_NO,                                      KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,
     KC_HYPR,        KC_Q,           KC_W,           KC_E,           KC_R,           KC_T,                                           KC_Y,           KC_U,           KC_I,           KC_O,           KC_P,           KC_BSLS,
-    KC_NO,          HM_A,           HM_S,           HM_D,           HM_F,           KC_G,                                           KC_H,           HM_J,           HM_K,           HM_L,           KC_SCLN,        KC_QUOT,
+    CLAVIER,        HM_A,           HM_S,           HM_D,           HM_F,           KC_G,                                           HM_H,           HM_J,           HM_K,           HM_L,           KC_SCLN,        KC_QUOT,
     KC_ESC,         KC_Z,           KC_X,           KC_C,           KC_V,           KC_B,                                           KC_N,           KC_M,           KC_COMM,        KC_DOT,         KC_SLSH,        KC_NO,
                                                                     LT_NAV,         LT_NUM,                                         LT_SYM,         LT_ACC
   ),
 
   [NAV] = LAYOUT_voyager(
-    KC_NO,          SHOTTR1,        SHOTTR2,        SHOTTR3,        KC_NO,          KC_NO,                                          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,
+    KC_NO,          SHOTTR1,        SHOTTR2,        SHOTTR3,        KC_F18,         KC_NO,                                          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,
     KC_NO,          KC_ESC,         SELWORD,        SELLINE,        NAV_RDO,        KC_DEL,                                      NAV_TBP,        NAV_TBN,        NAV_BCK,        NAV_FWD,        KC_TRNS,        KC_NO,
     KC_NO,          KC_LGUI,        KC_LALT,        KC_LCTL,        KC_LSFT,        KC_NO,                                          KC_LEFT,        KC_DOWN,        KC_UP,          KC_RGHT,        KC_TRNS,        KC_NO,
     KC_NO,          NAV_UND,        NAV_CUT,        NAV_CPY,        NAV_PST,        NAV_ALL,                                        KC_HOME,        KC_PGDN,        KC_PGUP,        KC_END,         KC_TRNS,        KC_NO,
@@ -151,6 +162,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 // Accents are typed as a macOS dead key followed by the letter. Mods are
 // stripped for the dead key (⌥⇧E is not the acute dead key) and restored for
 // the letter, so holding Shift yields the capital form.
+
+// The outer pinky can brush this key while rolling off Cmd. Emit F17 only on
+// release after 60 ms so that accidental brush does not open hint mode.
+static uint16_t clavier_press_time;
+
 static void tap_accent(uint16_t dead_key, uint16_t letter) {
   const uint8_t mods = get_mods();
   clear_mods();
@@ -175,6 +191,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         register_code(KC_F13);
       } else {
         unregister_code(KC_F13);
+      }
+      return false;
+
+    case CLAVIER:
+      if (record->event.pressed) {
+        clavier_press_time = timer_read();
+      } else if (timer_elapsed(clavier_press_time) >= 60) {
+        tap_code(KC_F17);
       }
       return false;
 
@@ -204,6 +228,11 @@ uint16_t get_quick_tap_term(uint16_t keycode, keyrecord_t *record) {
   // repeats the delete instead, so tap-then-hold chews through text the way a
   // plain Backspace key does. A cold hold still gives Symbols.
   if (keycode == LT_SYM) { return 120; }
+
+  // Same treatment for H, for the same reason: in vim you tap h to move left and
+  // then hold it to keep moving. Without a window here that hold would be Shift.
+  // A cold hold still gives Shift.
+  if (keycode == HM_H) { return 120; }
 
   // Everything else keeps QUICK_TAP_TERM 0: tap and immediately hold still
   // reaches the hold function, with no repeated letter in the way.

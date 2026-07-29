@@ -5,6 +5,11 @@
     "secondary": "F13",
     "role": "custom"
   },
+  "CLAVIER": {
+    "primary": "Clavier",
+    "secondary": "F17",
+    "role": "custom"
+  },
   "SHOTTR1": {
     "primary": "Shot 1",
     "secondary": "Hyper",
@@ -40,6 +45,11 @@
     "secondary": "Shift",
     "role": "modTap"
   },
+  "HM_H": {
+    "primary": "H",
+    "secondary": "Shift",
+    "role": "modTap"
+  },
   "HM_J": {
     "primary": "J",
     "secondary": "Ctrl",
@@ -52,7 +62,7 @@
   },
   "HM_L": {
     "primary": "L",
-    "secondary": "Shift",
+    "secondary": "Cmd",
     "role": "modTap"
   },
   "LT_NAV": {
