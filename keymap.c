@@ -273,15 +273,6 @@ static void light_layer(uint8_t layer, uint8_t h, uint8_t s, uint8_t v) {
   }
 }
 
-static void light_all(uint8_t h, uint8_t s, uint8_t v) {
-  const HSV hsv = {h, s, v};
-  const RGB rgb = hsv_to_rgb(hsv);
-  const float f = (float)rgb_matrix_config.hsv.v / UINT8_MAX;
-
-  for (uint8_t i = 0; i < RGB_MATRIX_LED_COUNT; ++i) {
-    rgb_matrix_set_color(i, f * rgb.r, f * rgb.g, f * rgb.b);
-  }
-}
 
 // Layer hues stay in the base lavender's family: same value, and a saturation
 // well below full, so a layer reads as a tint of the board rather than a
@@ -301,7 +292,7 @@ bool rgb_matrix_indicators_user(void) {
   }
 
   switch (get_highest_layer(layer_state)) {
-    case BASE:  light_all(191, 70, 231);                       break;
+    case BASE:  light_layer(BASE,  191,          70, 231);     break;
     case NAV:   light_layer(NAV,   128, LAYER_SAT, LAYER_VAL); break;
     case NUM:   light_layer(NUM,    21, LAYER_SAT, LAYER_VAL); break;
     case SYM:   light_layer(SYM,    85, LAYER_SAT, LAYER_VAL); break;
