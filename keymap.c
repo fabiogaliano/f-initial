@@ -392,6 +392,30 @@ bool achordion_chord(uint16_t tap_hold_keycode, keyrecord_t *tap_hold_record,
   return true;
 }
 
+uint16_t achordion_streak_chord_timeout(uint16_t tap_hold_keycode,
+                                        uint16_t next_keycode) {
+  // Returning 0 disables the streak check for this key, so achordion_chord()
+  // above decides — which means the chord is allowed.
+  //
+  // The streak rule suppresses a home row mod inside a fast run of letters. On
+  // this board that is exactly when Cmd and Ctrl chords get used: Cmd+V typed
+  // mid-sentence resolved as the letters "av", because Cmd sits on A and the
+  // preceding letter kept the streak alive. Same for Cmd+C/S/Z/A and for the
+  // Ctrl+A/E/K/W line-editing chords on HM_F and HM_H.
+  //
+  // Cmd and Ctrl are therefore exempt: they are shortcut mods, almost never
+  // pressed by accident, and a lost one is far more disruptive than a stray
+  // one. Shift and Opt keep the streak protection, since their misfires are
+  // the ones that silently corrupt text (a stray capital, a stray accented
+  // character) and they are rarely wanted mid-streak.
+  if (IS_QK_MOD_TAP(tap_hold_keycode)) {
+    const uint8_t mods = QK_MOD_TAP_GET_MODS(tap_hold_keycode) & 0x0F;
+    if (mods & (MOD_LGUI | MOD_LCTL)) { return 0; }
+  }
+
+  return achordion_streak_timeout(tap_hold_keycode);
+}
+
 void matrix_scan_user(void) {
   if (mouse_wheel_keys_held > 0 && !mouse_wheel_boosted &&
       timer_elapsed(mouse_wheel_hold_timer) >= MOUSE_WHEEL_BOOST_DELAY) {
