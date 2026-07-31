@@ -22,6 +22,28 @@
 // this; see get_quick_tap_term() in keymap.c.
 #define QUICK_TAP_TERM_PER_KEY
 
+// Mouse Keys sends the first pointer or wheel report immediately; each delay
+// only gates held repetition. Keep taps discrete, start wheel reports at one
+// step, and ramp slowly enough that held scrolling stays controllable. In this QMK
+// fork TIME_TO_MAX is a repeat count, so the wheel reaches its normal maximum
+// after roughly 60 * 50 ms rather than after 60 ms.
+#undef MOUSEKEY_DELAY
+#define MOUSEKEY_DELAY 60
+#define MOUSEKEY_MOVE_DELTA 4
+#undef MOUSEKEY_MAX_SPEED
+#define MOUSEKEY_MAX_SPEED 10
+#undef MOUSEKEY_TIME_TO_MAX
+#define MOUSEKEY_TIME_TO_MAX 24
+
+#undef MOUSEKEY_WHEEL_DELAY
+#define MOUSEKEY_WHEEL_DELAY 100
+#undef MOUSEKEY_WHEEL_INTERVAL
+#define MOUSEKEY_WHEEL_INTERVAL 50
+#undef MOUSEKEY_WHEEL_MAX_SPEED
+#define MOUSEKEY_WHEEL_MAX_SPEED 6
+#undef MOUSEKEY_WHEEL_TIME_TO_MAX
+#define MOUSEKEY_WHEEL_TIME_TO_MAX 60
+
 // Suppress home row mods inside a typing streak. This replaces Achordion's
 // opposite-hands rule, which is unusable here because Cmd sits on the left
 // pinky and most macOS Cmd shortcuts are left-hand letters.

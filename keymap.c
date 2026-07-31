@@ -1,6 +1,7 @@
 #include QMK_KEYBOARD_H
 #include "version.h"
 
+#include "eeconfig.h"
 #include "features/achordion.h"
 #include "features/select_word.h"
 
@@ -21,6 +22,9 @@ enum custom_keycodes {
   CLAVIER,
   SELWORD,
   SELLINE,
+  MOUSE_SPD_DEC,
+  MOUSE_SPD_RST,
+  MOUSE_SPD_INC,
   // Portuguese accents via macOS dead keys.
   PT_AACU,  // á
   PT_AGRV,  // à
@@ -39,23 +43,65 @@ enum custom_keycodes {
 uint16_t SELECT_WORD_KEYCODE = SELWORD;
 uint16_t SELECT_LINE_KEYCODE = SELLINE;
 
+extern uint8_t mk_max_speed;
+extern uint8_t mk_wheel_max_speed;
+
+enum mouse_speed_level {
+  MOUSE_SPEED_LEVEL_0,
+  MOUSE_SPEED_LEVEL_1,
+  MOUSE_SPEED_LEVEL_2,
+  MOUSE_SPEED_NORMAL,
+  MOUSE_SPEED_LEVEL_4,
+  MOUSE_SPEED_LEVEL_5,
+  MOUSE_SPEED_LEVEL_COUNT,
+};
+
+typedef struct {
+  uint8_t pointer_max;
+  uint8_t wheel_max;
+} mouse_speed_config_t;
+
+static const mouse_speed_config_t mouse_speed_configs[MOUSE_SPEED_LEVEL_COUNT] = {
+  [MOUSE_SPEED_LEVEL_0] = {.pointer_max = 4, .wheel_max = 1},
+  [MOUSE_SPEED_LEVEL_1] = {.pointer_max = 6, .wheel_max = 2},
+  [MOUSE_SPEED_LEVEL_2] = {.pointer_max = 8, .wheel_max = 4},
+  [MOUSE_SPEED_NORMAL] = {.pointer_max = MOUSEKEY_MAX_SPEED, .wheel_max = MOUSEKEY_WHEEL_MAX_SPEED},
+  [MOUSE_SPEED_LEVEL_4] = {.pointer_max = 13, .wheel_max = 7},
+  [MOUSE_SPEED_LEVEL_5] = {.pointer_max = 16, .wheel_max = 8},
+};
+
+#define MOUSE_SPEED_EECONFIG_MAGIC 0x4D510000UL
+#define MOUSE_SPEED_EECONFIG_MASK 0xFFFFFF00UL
+
+// QMK's linear ramp plateaus after three seconds. A bounded second stage makes
+// deliberate long holds useful without raising the speed of ordinary scrolls.
+#define MOUSE_WHEEL_BOOST_DELAY 6000
+#define MOUSE_WHEEL_BOOST_AMOUNT 2
+
+static uint8_t mouse_speed_level;
+static uint8_t mouse_wheel_keys_held;
+static uint16_t mouse_wheel_hold_timer;
+static bool mouse_wheel_boosted;
+
 // Home row mods, mirrored finger for finger. The right hand rests on H-J-K-L,
 // one column inward from the usual J-K-L-semicolon, so the mirror is taken
 // across the fingers rather than across the physical halves:
 //
 //   pinky ring mid index │ index mid ring pinky
 //     A    S    D    F   │   H    J    K    L
-//    Cmd  Opt  Ctrl Shft │  Shft Ctrl Opt  Cmd
+//    Cmd  Opt  Shft Ctrl │  Ctrl Shft Opt  Cmd
 //
-// Strongest finger carries the most-used modifier on both hands, weakest the
-// least-used. Shift on the index also means an inward roll can never end on a
-// held Shift, so fast rolls cannot produce stray capitals.
+// Ctrl and Shift were swapped from the original mirror (Shift on index, Ctrl
+// on middle) by preference. This gives up the guarantee that an inward roll
+// can never end on a held Shift, so fast rolls can in principle produce a
+// stray capital again; HM_H's quick-tap term is unaffected, since it exists
+// to protect vim's h-repeat rather than Shift itself.
 #define HM_A MT(MOD_LGUI, KC_A)
 #define HM_S MT(MOD_LALT, KC_S)
-#define HM_D MT(MOD_LCTL, KC_D)
-#define HM_F MT(MOD_LSFT, KC_F)
-#define HM_H MT(MOD_RSFT, KC_H)
-#define HM_J MT(MOD_RCTL, KC_J)
+#define HM_D MT(MOD_LSFT, KC_D)
+#define HM_F MT(MOD_LCTL, KC_F)
+#define HM_H MT(MOD_RCTL, KC_H)
+#define HM_J MT(MOD_RSFT, KC_J)
 #define HM_K MT(MOD_RALT, KC_K)
 #define HM_L MT(MOD_RGUI, KC_L)
 
@@ -67,6 +113,14 @@ uint16_t SELECT_LINE_KEYCODE = SELLINE;
 #define LT_NUM LT(NUM, KC_TAB)
 #define LT_SYM LT(SYM, KC_BSPC)
 #define LT_ACC LT(ACC, KC_SPC)
+#define LT_MOUSE LT(MOUSE, KC_ESC)
+
+// Persistent, bounded speed steps. Slwr and Fstr move one level, while Norm
+// restores the config.h baseline. The two faster levels favor pointer speed so
+// scrolling remains close to the normal profile.
+#define MS_SLOW MOUSE_SPD_DEC
+#define MS_NORM MOUSE_SPD_RST
+#define MS_FAST MOUSE_SPD_INC
 
 // Shottr captures, on the Nav layer at the digit positions the user already
 // knows. They moved off Base so the top row can be plain digits for Aerospace's
@@ -78,11 +132,7 @@ uint16_t SELECT_LINE_KEYCODE = SELLINE;
 // ç is a single macOS combination, so Shift composes Ç for free.
 #define PT_CCED LALT(KC_C)
 
-#define NAV_UND LGUI(KC_Z)
 #define NAV_RDO LGUI(LSFT(KC_Z))
-#define NAV_CUT LGUI(KC_X)
-#define NAV_CPY LGUI(KC_C)
-#define NAV_PST LGUI(KC_V)
 #define NAV_ALL LGUI(KC_A)
 #define NAV_BCK LGUI(KC_LBRC)
 #define NAV_FWD LGUI(KC_RBRC)
@@ -94,22 +144,22 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     WISPR,          KC_1,           KC_2,           KC_3,           KC_4,           KC_NO,                                      KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,
     KC_HYPR,        KC_Q,           KC_W,           KC_E,           KC_R,           KC_T,                                           KC_Y,           KC_U,           KC_I,           KC_O,           KC_P,           KC_BSLS,
     CLAVIER,        HM_A,           HM_S,           HM_D,           HM_F,           KC_G,                                           HM_H,           HM_J,           HM_K,           HM_L,           KC_SCLN,        KC_QUOT,
-    KC_ESC,         KC_Z,           KC_X,           KC_C,           KC_V,           KC_B,                                           KC_N,           KC_M,           KC_COMM,        KC_DOT,         KC_SLSH,        KC_NO,
+    LT_MOUSE,       KC_Z,           KC_X,           KC_C,           KC_V,           KC_B,                                           KC_N,           KC_M,           KC_COMM,        KC_DOT,         KC_SLSH,        KC_NO,
                                                                     LT_NAV,         LT_NUM,                                         LT_SYM,         LT_ACC
   ),
 
   [NAV] = LAYOUT_voyager(
     KC_NO,          SHOTTR1,        SHOTTR2,        SHOTTR3,        KC_F18,         KC_NO,                                          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,
     KC_NO,          KC_ESC,         SELWORD,        SELLINE,        NAV_RDO,        KC_DEL,                                      NAV_TBP,        NAV_TBN,        NAV_BCK,        NAV_FWD,        KC_TRNS,        KC_NO,
-    KC_NO,          KC_LGUI,        KC_LALT,        KC_LCTL,        KC_LSFT,        KC_NO,                                          KC_LEFT,        KC_DOWN,        KC_UP,          KC_RGHT,        KC_TRNS,        KC_NO,
-    KC_NO,          NAV_UND,        NAV_CUT,        NAV_CPY,        NAV_PST,        NAV_ALL,                                        KC_HOME,        KC_PGDN,        KC_PGUP,        KC_END,         KC_TRNS,        KC_NO,
+    KC_NO,          KC_LGUI,        KC_LALT,        KC_LSFT,        KC_LCTL,        KC_NO,                                          KC_LEFT,        KC_DOWN,        KC_UP,          KC_RGHT,        KC_TRNS,        KC_NO,
+    KC_NO,          KC_TRNS,        NAV_ALL,        KC_TRNS,        KC_TRNS,        KC_TRNS,                                        KC_HOME,        KC_PGDN,        KC_PGUP,        KC_END,         KC_TRNS,        KC_NO,
                                                                     KC_TRNS,        KC_TRNS,                                        KC_TRNS,        KC_TRNS
   ),
 
   [NUM] = LAYOUT_voyager(
     KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,                                          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,
     KC_NO,          KC_PLUS,        KC_MINS,        KC_ASTR,        KC_SLSH,        KC_EQL,                                         KC_7,           KC_8,           KC_9,           KC_EQL,         KC_TRNS,        KC_NO,
-    KC_NO,          KC_LGUI,        KC_LALT,        KC_LCTL,        KC_LSFT,        KC_TRNS,                                        KC_4,           KC_5,           KC_6,           KC_ENT,         KC_TRNS,        KC_NO,
+    KC_NO,          KC_LGUI,        KC_LALT,        KC_LSFT,        KC_LCTL,        KC_TRNS,                                        KC_4,           KC_5,           KC_6,           KC_ENT,         KC_TRNS,        KC_NO,
     KC_NO,          KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,                                        KC_1,           KC_2,           KC_3,           KC_DOT,         KC_TRNS,        KC_NO,
                                                                     KC_TRNS,        KC_TRNS,                                        KC_BSPC,        KC_0
   ),
@@ -119,11 +169,18 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   // left hand is operators, laid out so the common bigrams roll inward toward
   // the index (!= += *= <= ->), and so the symbols that get typed twice in a
   // row (== ++ -- // **) never land on a pinky.
+  //
+  // : and $ moved off the right hand's J column onto the left hand's row-1
+  // F/G, which were otherwise dead: both are frequent in TypeScript, and the
+  // left hand is the one that isn't sore. That freed J/K for the bracket
+  // pairs (previously on K/L), and folded the right hand's stretch ; column
+  // (%, ?, @) inward onto the now-empty L, so this layer never reaches past
+  // the right hand's own home row.
   [SYM] = LAYOUT_voyager(
     KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,                                          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,
-    KC_NO,          KC_GRV,         KC_LABK,        KC_RABK,        KC_NO,          KC_NO,                                          KC_AMPR,        KC_NO,          KC_LBRC,        KC_RBRC,        KC_PERC,        KC_NO,
-    KC_NO,          KC_EXLM,        KC_MINS,        KC_PLUS,        KC_EQL,         KC_HASH,                                        KC_PIPE,        KC_COLN,        KC_LPRN,        KC_RPRN,        KC_QUES,        KC_NO,
-    KC_NO,          KC_CIRC,        KC_SLSH,        KC_ASTR,        KC_UNDS,        PT_EURO,                                        KC_TILD,        KC_DLR,         KC_LCBR,        KC_RCBR,        KC_AT,          KC_NO,
+    KC_NO,          KC_GRV,         KC_LABK,        KC_RABK,        KC_COLN,        KC_DLR,                                         KC_AMPR,        KC_LBRC,        KC_RBRC,        KC_PERC,        KC_NO,          KC_NO,
+    KC_NO,          KC_EXLM,        KC_MINS,        KC_PLUS,        KC_EQL,         KC_HASH,                                        KC_PIPE,        KC_LPRN,        KC_RPRN,        KC_QUES,        KC_NO,          KC_NO,
+    KC_NO,          KC_CIRC,        KC_SLSH,        KC_ASTR,        KC_UNDS,        PT_EURO,                                        KC_TILD,        KC_LCBR,        KC_RCBR,        KC_AT,          KC_NO,          KC_NO,
                                                                     KC_TRNS,        KC_TRNS,                                        KC_TRNS,        KC_TRNS
   ),
 
@@ -145,13 +202,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
   // The pre-redesign mouse layer, restored from commit 53880a7. Plain mouse
   // keycodes, not Orbital Mouse: the left hand steers in 8 directions and the
-  // left thumbs click. NOTHING ACTIVATES THIS LAYER YET - it is unreachable
-  // until an activation key is chosen.
+  // left thumbs click. Hold Escape to access it; tap Escape normally.
   //
   // Two keys from the original are dropped: QK_LLCK (layer lock, disabled in
   // rules.mk) and TD(DANCE_8) (tap dance, likewise).
   [MOUSE] = LAYOUT_voyager(
-    KC_NO,          KC_MS_ACCEL0,   KC_MS_ACCEL1,   KC_MS_ACCEL2,   KC_TRNS,        KC_TRNS,                                        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,
+    KC_NO,          MS_SLOW,        MS_NORM,        MS_FAST,        KC_TRNS,        KC_TRNS,                                        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,
     KC_TRNS,        KC_MS_WH_DOWN,  KC_MS_UP,       KC_MS_WH_UP,    KC_TRNS,        KC_TRNS,                                        KC_LEFT,        KC_DOWN,        KC_UP,          KC_RIGHT,       KC_TRNS,        KC_TRNS,
     KC_TRNS,        KC_MS_LEFT,     KC_MS_DOWN,     KC_MS_RIGHT,    KC_TRNS,        KC_TRNS,                                        KC_RIGHT_CTRL,  KC_RIGHT_SHIFT, KC_LEFT_ALT,    KC_RIGHT_GUI,   KC_TRNS,        KC_TRNS,
     KC_TRNS,        KC_MS_WH_LEFT,  KC_MS_BTN3,     KC_MS_WH_RIGHT, KC_TRNS,        KC_TRNS,                                        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_NO,
@@ -166,6 +222,42 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 // The outer pinky can brush this key while rolling off Cmd. Emit F17 only on
 // release after 60 ms so that accidental brush does not open hint mode.
 static uint16_t clavier_press_time;
+
+static bool mouse_speed_config_is_valid(uint32_t config) {
+  const uint8_t level = config & 0xFF;
+  return (config & MOUSE_SPEED_EECONFIG_MASK) == MOUSE_SPEED_EECONFIG_MAGIC &&
+         level < MOUSE_SPEED_LEVEL_COUNT;
+}
+
+static uint8_t current_wheel_max_speed(void) {
+  const uint8_t base = mouse_speed_configs[mouse_speed_level].wheel_max;
+  return mouse_wheel_boosted ? base + MOUSE_WHEEL_BOOST_AMOUNT : base;
+}
+
+static void apply_mouse_speed(uint8_t level) {
+  const mouse_speed_config_t config = mouse_speed_configs[level];
+  mouse_speed_level = level;
+  mk_max_speed = config.pointer_max;
+  mk_wheel_max_speed = current_wheel_max_speed();
+}
+
+static void save_mouse_speed(uint8_t level) {
+  apply_mouse_speed(level);
+  eeconfig_update_user(MOUSE_SPEED_EECONFIG_MAGIC | level);
+}
+
+void eeconfig_init_user(void) {
+  eeconfig_update_user(MOUSE_SPEED_EECONFIG_MAGIC | MOUSE_SPEED_NORMAL);
+}
+
+void keyboard_post_init_user(void) {
+  const uint32_t config = eeconfig_read_user();
+  if (mouse_speed_config_is_valid(config)) {
+    apply_mouse_speed(config & 0xFF);
+  } else {
+    save_mouse_speed(MOUSE_SPEED_NORMAL);
+  }
+}
 
 static void tap_accent(uint16_t dead_key, uint16_t letter) {
   const uint8_t mods = get_mods();
@@ -184,6 +276,22 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   if (!process_achordion(keycode, record)) { return false; }
   if (!process_select_word(keycode, record)) { return false; }
 
+  if (IS_MOUSEKEY_WHEEL(keycode)) {
+    if (record->event.pressed) {
+      if (mouse_wheel_keys_held == 0) {
+        mouse_wheel_hold_timer = timer_read();
+        mouse_wheel_boosted = false;
+      }
+      if (mouse_wheel_keys_held < UINT8_MAX) { ++mouse_wheel_keys_held; }
+    } else if (mouse_wheel_keys_held > 0) {
+      --mouse_wheel_keys_held;
+      if (mouse_wheel_keys_held == 0) {
+        mouse_wheel_boosted = false;
+        mk_wheel_max_speed = current_wheel_max_speed();
+      }
+    }
+  }
+
   switch (keycode) {
     case WISPR:
       // Held, not tapped: the key must stay down while the user speaks.
@@ -199,6 +307,24 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         clavier_press_time = timer_read();
       } else if (timer_elapsed(clavier_press_time) >= 60) {
         tap_code(KC_F17);
+      }
+      return false;
+
+    case MOUSE_SPD_DEC:
+      if (record->event.pressed && mouse_speed_level > MOUSE_SPEED_LEVEL_0) {
+        save_mouse_speed(mouse_speed_level - 1);
+      }
+      return false;
+
+    case MOUSE_SPD_RST:
+      if (record->event.pressed && mouse_speed_level != MOUSE_SPEED_NORMAL) {
+        save_mouse_speed(MOUSE_SPEED_NORMAL);
+      }
+      return false;
+
+    case MOUSE_SPD_INC:
+      if (record->event.pressed && mouse_speed_level < MOUSE_SPEED_LEVEL_COUNT - 1) {
+        save_mouse_speed(mouse_speed_level + 1);
       }
       return false;
 
@@ -230,8 +356,8 @@ uint16_t get_quick_tap_term(uint16_t keycode, keyrecord_t *record) {
   if (keycode == LT_SYM) { return 120; }
 
   // Same treatment for H, for the same reason: in vim you tap h to move left and
-  // then hold it to keep moving. Without a window here that hold would be Shift.
-  // A cold hold still gives Shift.
+  // then hold it to keep moving. Without a window here that hold would fire
+  // HM_H's modifier (Ctrl). A cold hold still gives that modifier.
   if (keycode == HM_H) { return 120; }
 
   // Everything else keeps QUICK_TAP_TERM 0: tap and immediately hold still
@@ -267,6 +393,12 @@ bool achordion_chord(uint16_t tap_hold_keycode, keyrecord_t *tap_hold_record,
 }
 
 void matrix_scan_user(void) {
+  if (mouse_wheel_keys_held > 0 && !mouse_wheel_boosted &&
+      timer_elapsed(mouse_wheel_hold_timer) >= MOUSE_WHEEL_BOOST_DELAY) {
+    mouse_wheel_boosted = true;
+    mk_wheel_max_speed = current_wheel_max_speed();
+  }
+
   achordion_task();
 }
 

@@ -37,22 +37,22 @@
   },
   "HM_D": {
     "primary": "D",
-    "secondary": "Ctrl",
+    "secondary": "Shift",
     "role": "modTap"
   },
   "HM_F": {
     "primary": "F",
-    "secondary": "Shift",
+    "secondary": "Ctrl",
     "role": "modTap"
   },
   "HM_H": {
     "primary": "H",
-    "secondary": "Shift",
+    "secondary": "Ctrl",
     "role": "modTap"
   },
   "HM_J": {
     "primary": "J",
-    "secondary": "Ctrl",
+    "secondary": "Shift",
     "role": "modTap"
   },
   "HM_K": {
@@ -85,6 +85,23 @@
     "secondary": "Accent",
     "role": "layerTap"
   },
+  "LT_MOUSE": {
+    "primary": "Esc",
+    "secondary": "Mouse",
+    "role": "layerTap"
+  },
+  "MS_SLOW": {
+    "primary": "Slwr",
+    "role": "custom"
+  },
+  "MS_NORM": {
+    "primary": "Norm",
+    "role": "custom"
+  },
+  "MS_FAST": {
+    "primary": "Fstr",
+    "role": "custom"
+  },
   "SELWORD": {
     "primary": "Sel Word",
     "role": "custom"
@@ -93,24 +110,8 @@
     "primary": "Sel Line",
     "role": "custom"
   },
-  "NAV_UND": {
-    "primary": "Undo",
-    "role": "chord"
-  },
   "NAV_RDO": {
     "primary": "Redo",
-    "role": "chord"
-  },
-  "NAV_CUT": {
-    "primary": "Cut",
-    "role": "chord"
-  },
-  "NAV_CPY": {
-    "primary": "Copy",
-    "role": "chord"
-  },
-  "NAV_PST": {
-    "primary": "Paste",
     "role": "chord"
   },
   "NAV_ALL": {

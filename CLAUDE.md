@@ -28,8 +28,8 @@ placement; read it before moving keys. Its §7 design rules and §9 rejected lis
 apply to any change.
 
 ### Key patterns
-- Home row mods: left `A`/`S`/`D`/`F` = Cmd/Opt/Ctrl/Shift, right `J`/`K`/`L` =
-  Ctrl/Opt/Shift. `H` is deliberately plain.
+- Home row mods: left `A`/`S`/`D`/`F` = Cmd/Opt/Shift/Ctrl, right `H`/`J`/`K`/`L` =
+  Ctrl/Shift/Opt/Cmd.
 - Every layer is a momentary thumb hold; Media is a tri-layer of the two left
   thumbs. There are no toggles.
 - The thumb layers stay on fixed hands, but their tapped letters were swapped back

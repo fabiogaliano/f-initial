@@ -113,7 +113,7 @@ the physical `T` position, not the character that the key sends.
 | 3 | Symbols | Hold right inner thumb (`Backspace`) |
 | 4 | Accents | Hold right outer thumb (`Space`) |
 | 5 | Media | Hold both left thumbs (`Enter` + `Tab`) |
-| 6 | Mouse | Unreachable |
+| 6 | Mouse | Hold left outer row 3 (`Escape`) |
 
 The layer headings further down still name the pre-swap tap letters. Read them by
 thumb position: Nav and Numbers are the left thumbs, Symbols and Accents the right.
@@ -137,7 +137,7 @@ fight the typing hand.
               │SPC│TAB│               │BSP│ENT│
               └───┴───┘               └───┴───┘
    hold: Nav ─┘   └─ Num        Sym ─┘   └─ Accents
-              └── both = Media ──┘
+         Mouse ─┘  └── both = Media ──┘
 ```
 
 **Home row mods**
@@ -152,33 +152,43 @@ with standard fingering, where `L` is the ring finger; under this rest position
 |---|---|---|---|---|
 | pinky | `A` | Cmd ⌘ | `L` | Cmd ⌘ |
 | ring | `S` | Option ⌥ | `K` | Option ⌥ |
-| middle | `D` | Ctrl | `J` | Ctrl |
-| index | `F` | **Shift** | `H` | **Shift** |
+| middle | `D` | **Shift** | `J` | **Shift** |
+| index | `F` | Ctrl | `H` | Ctrl |
 
 A finger-for-finger mirror. Read straight across the board it is a palindrome:
-Cmd Opt Ctrl Shift │ Shift Ctrl Opt Cmd. One rule covers both hands.
+Cmd Opt Shift Ctrl │ Ctrl Shift Opt Cmd. One rule covers both hands.
 
 The mirror is taken across the *fingers*, not across the two halves. A physical
 mirror would pair `A` with `;` and `F` with `J`, which is wrong here because the
 right hand is shifted inward — `;` sits outside the rest position entirely and
 stays a plain key.
 
-Shift is on the index because it is the most-used modifier and the index is the
-strongest finger. It also means an inward roll can never end on a held Shift, so
-fast rolls cannot produce stray capitals. Cmd, the most-used modifier after Shift
-on macOS, is on the pinky to keep the existing left-hand habit; the weak middle
-and ring fingers get Ctrl and Option, which are held only briefly.
+**Amended.** Ctrl and Shift were originally the reverse of this — Shift on the
+index (`F`/`H`), Ctrl on the middle finger (`D`/`J`) — because the index is the
+strongest finger and an inward roll could then never end on a held Shift,
+preventing stray capitals from fast rolls. Swapped by preference; the
+inward-roll guarantee against stray capitals no longer holds, since Shift now
+sits on the finger a roll can still land on. Cmd, the most-used modifier on
+macOS, stays on the pinky to keep the existing left-hand habit; the weak ring
+finger still gets Option, held only briefly.
 
-`H` carries Shift despite being the most frequent letter on that hand and the
+`H` carries Ctrl despite being the most frequent letter on that hand and the
 left arrow on the Nav layer. Tapped it is still `h`, and `get_quick_tap_term`
 returns 120 ms for it so that tap-then-hold autorepeats `h` for vim motion
-instead of firing Shift. A cold hold is still Shift.
+instead of firing HM_H's modifier. A cold hold still gives that modifier.
 
 **Superseded.** `H` was previously plain, with Shift on `L` and no right-hand
 Cmd at all. That left every `Cmd`+left-letter chord on one hand — `Cmd+A` was
-not typeable at all, since Cmd lived on `A` — which is why the Nav layer carries
-`NAV_UND`/`CUT`/`CPY`/`PST`/`ALL`. Those are now a convenience rather than the
-only way to reach those shortcuts.
+not typeable at all, since Cmd lived on `A` — which is why the Nav layer
+originally carried `NAV_UND`/`CUT`/`CPY`/`PST`/`ALL` as dedicated chord keys.
+
+**Amended.** Right-hand Cmd on `L` made those macros redundant except for
+`ALL`: Achordion allows same-hand chords, so `Cmd+Z`/`X`/`C`/`V` are just as
+reachable by holding the `A` home-row mod and tapping the letter directly.
+`Cmd+A` (Select All) is the one exception — `A` itself is the Cmd key, so it
+can't be its own chord target — so it kept a dedicated slot and moved onto
+`X`, the best-positioned of the four freed keys. `NAV_UND`, `NAV_CUT`,
+`NAV_CPY` and `NAV_PST` were deleted; `Z`, `C` and `V` fall through to Base.
 
 **Top row**
 
@@ -205,7 +215,7 @@ The digits are otherwise gone from Base; `5`-`0` live on the Numbers layer.
 |---|---|---|
 | 0 | `WSP` | Wispr Flow push-to-talk. Sends `F13`, held. |
 | 1 | `HYP` | Hyper (`KC_HYPR`). Used for Shottr and global hotkeys. |
-| 2 | `CLV` | Clavier. Sends `F17` on release after a 60 ms press. |
+| 2 | `CLV` | Clavier. Sends `F17` on release after a 60 ms press. In Ghostty, Karabiner rewrites one tap to the Herdr prefix and two taps to the command palette. |
 | 3 | `ESC` | Escape. Plain key, no hold function. |
 
 Row 2 is the best key in the column, because the pinky slides sideways with no
@@ -244,9 +254,9 @@ jump. No extra keys are needed for those.
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
 │ × │ESC│SEL│SLN│RDO│ — │         │TB←│TB→│BCK│FWD│ — │ × │
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
-│ × │CMD│OPT│CTL│SFT│FND│         │ ← │ ↓ │ ↑ │ → │ — │ × │
+│ × │CMD│OPT│SFT│CTL│ × │         │ ← │ ↓ │ ↑ │ → │ — │ × │
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
-│ × │UND│CUT│CPY│PST│ALL│         │HOM│PGD│PGU│END│ — │ × │
+│ × │ — │ALL│ — │ — │ — │         │HOM│PGD│PGU│END│ — │ × │
 └───┴───┴───┴───┴───┴───┘         └───┴───┴───┴───┴───┴───┘
 ```
 
@@ -258,10 +268,16 @@ the next row navigates the application: previous tab, next tab, back, forward.
 This removes mouse work.
 
 The left keys use the letter as the memory aid: `W` = select **W**ord,
-`E` = select lin**E**, `G` = find (**G**rep), and `Z` `X` `C` `V` `B` keep the
-standard macOS edit positions.
+`E` = select lin**E**. On the bottom row, only `X` (`ALL`, Select All) carries
+a dedicated chord now — see the Amended note above. `Z`, `C`, `V` and `B` are
+transparent, so they still type their Base letters while Nav is held.
 
 `SEL` is the Select Word module. `SLN` extends the same module to a full line.
+
+The index-finger inward reach held `HRD`, the Herdr prefix, until the Clavier key
+absorbed it. The Nav copy had a trap the Clavier key does not: the prefix is
+followed by a key from the base layer, so the thumb had to release first or the
+follow-up came off Nav instead. The slot is now free.
 
 ### Layer 2 — Numbers (hold left `Tab`)
 
@@ -307,16 +323,16 @@ design below it is kept as history at the end of this section.
 ┌───┬───┬───┬───┬───┬───┐         ┌───┬───┬───┬───┬───┬───┐
 │ × │ × │ × │ × │ × │ × │         │ × │ × │ × │ × │ × │ × │
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
-│ × │ ` │ < │ > │ × │ × │         │ & │ × │ [ │ ] │ % │ × │
+│ × │ ` │ < │ > │ : │ $ │         │ & │ [ │ ] │ % │ × │ × │
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
-│ × │ ! │ - │ + │ = │ # │         │ | │ : │ ( │ ) │ ? │ × │
+│ × │ ! │ - │ + │ = │ # │         │ | │ ( │ ) │ ? │ × │ × │
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
-│ × │ ^ │ / │ * │ _ │ € │         │ ~ │ $ │ { │ } │ @ │ × │
+│ × │ ^ │ / │ * │ _ │ € │         │ ~ │ { │ } │ @ │ × │ × │
 └───┴───┴───┴───┴───┴───┘         └───┴───┴───┴───┴───┴───┘
    pnky ring mid  ix  inner        inner  ix  mid ring pnky
 ```
 
-Three rules, in the order they matter:
+Four rules, in the order they matter:
 
 1. **The right hand is brackets, and only brackets.** Middle finger opens, ring
    finger closes, three pairs stacked: `[]`, `()`, `{}`. One motion learned once
@@ -328,16 +344,24 @@ Three rules, in the order they matter:
 3. **Nothing doubled sits on a pinky.** `==`, `++`, `--`, `//`, `**` are all typed
    twice in a row, so they live on ring, middle and index. Pinkies take the
    symbols that are never doubled: `` ` ``, `!`, `^`, `&`, `|`, `~`.
+4. **The sore hand never reaches past its own home row.** The bracket pairs
+   moved in from ring/pinky (`K`/`L`) to middle/ring (`J`/`K`), and `%`/`?`/`@`
+   folded in from the stretch `;` column onto the now-empty `L`. That freed
+   the right hand's `J` column, which used to hold `:` and `$`; both moved to
+   the left hand's row-1 `F`/`G` instead — dead slots before this change, and
+   on the hand that isn't sore. `:` and `$` are frequent enough in TypeScript
+   to be worth a slot of their own.
 
-The three dead slots held `"`, `.` and a `::` macro in Getreuer's original. The
-first two are on the base layer here and the third is not wanted, so they stay
-dead rather than take invented filler.
+**Amended.** `:` and `$` used to live on the right hand's `J` column (rows 2
+and 3) before rule 4 moved them left; `%`/`?`/`@` used to live on the `;`
+column before folding onto `L`.
 
 `, . / ' ; \\` stay on the base layer. They need no slot here.
 
 A number-order top row (`!@#$%^&*`) was rejected: it spends the best keys on rare
-symbols. Code combination keys (`=>`, `->`, `${}`) were also rejected. Add them later
-if the user wants them.
+symbols. Code combination keys (`=>`, `->`, `${}`) were also rejected — `->` is
+already a two-tap roll (`-` then `>`), and the others weren't given a slot. Add
+them later if the user wants them.
 
 **Superseded design.** The layer was originally a mirror, with each bracket pair on
 the same finger of opposite hands (`< [ { ( =` against `| ) } ] >`). It was coherent
@@ -649,9 +673,12 @@ Apply these rules to any future change.
 
 - **Application-shortcut audit.** Inventory the hotkeys of every main application,
   resolve the conflicts, and mirror the important ones into the keymap as single keys.
-  Record the result in this file. Applications: Shottr (done), Wispr Flow, the browser,
-  Herd, Raycast, the window manager, Karabiner, macOS itself, clavier.app.
+  Record the result in this file. Applications: Shottr (done), Herdr (done), Wispr Flow,
+  the browser, Raycast, the window manager, Karabiner, macOS itself, clavier.app.
   The 9 free base top-row slots and the 2 free right outer keys are reserved for this.
+  Herdr resolved without spending a base slot: its prefix is `Ctrl+;`, which no TUI can
+  claim because it is not encodable as a legacy control code, and both its prefix and its
+  palette reuse the Clavier key through a Karabiner branch on the frontmost application.
 - **Launcher row.** The top row of the Media layer sends `F13` to `F20` to Raycast,
   which then runs scripts. A keyboard can only send keystrokes; it cannot run a script
   by itself. `F13` to `F20` are safe, because no physical Mac keyboard has them.

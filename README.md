@@ -54,7 +54,14 @@ interface.
 | 3 | Symbols | hold right inner thumb (`Backspace`) |
 | 4 | Accents | hold right outer thumb (`Space`) |
 | 5 | Media | hold both left thumbs (tri-layer) |
-| 6 | Mouse | no activation key yet |
+| 6 | Mouse | hold left outer row 3 (`Escape`) |
+
+Mouse wheel taps send one native HID step immediately. Holding a wheel key
+repeats after 100 ms, ramps over roughly three seconds, and gets one bounded
+second-stage boost after a six-second hold. `Slwr` and `Fstr` on the Mouse layer
+adjust a bounded persistent speed level, while `Norm` restores
+the firmware default. Pointer movement reaches full speed in roughly half a
+second; the faster levels favor pointer speed so scrolling changes less.
 
 ## Files
 
