@@ -378,6 +378,24 @@ uint16_t achordion_timeout(uint16_t tap_hold_keycode) {
   return 500;
 }
 
+bool achordion_eager_mod(uint8_t mod) {
+  // An "eager" mod is registered the moment the key goes down, instead of
+  // waiting for Achordion to settle the tap-hold. Achordion's default treats
+  // Shift and Ctrl as eager but not Alt or GUI.
+  //
+  // Cmd must be eager here because of Cmd+click. A mouse click on an external
+  // mouse is not a QMK event, so Achordion never sees it and the chord check
+  // that normally settles a mod instantly cannot run. The only thing left to
+  // settle the key is achordion_timeout() below, which made every Cmd+click
+  // wait out a hold that plain mod-taps registered at TAPPING_TERM.
+  //
+  // Alt stays lazy, as Achordion ships it: a stray Alt on macOS inserts an
+  // accented character, and Opt+click is rare enough not to trade that away.
+  if (mod & MOD_LGUI) { return true; }
+
+  return (mod & (MOD_LALT | MOD_LGUI)) == 0;
+}
+
 bool achordion_chord(uint16_t tap_hold_keycode, keyrecord_t *tap_hold_record,
                      uint16_t other_keycode, keyrecord_t *other_record) {
   // Every chord is allowed, same hand included. The opposite-hands rule cannot
