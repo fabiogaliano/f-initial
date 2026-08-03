@@ -90,6 +90,31 @@
     "secondary": "Mouse",
     "role": "layerTap"
   },
+  "LOL_TOGGLE": {
+    "primary": "LoL",
+    "secondary": "Double tap",
+    "role": "custom"
+  },
+  "LOL_SMARTCAST_HOLD": {
+    "primary": "Smartcast",
+    "secondary": "Hold",
+    "role": "layerTap"
+  },
+  "CHAT_ENTER": {
+    "primary": "Chat",
+    "secondary": "Enter",
+    "role": "custom"
+  },
+  "CHAT_SEND": {
+    "primary": "Send",
+    "secondary": "Enter",
+    "role": "custom"
+  },
+  "CHAT_CANCEL": {
+    "primary": "Cancel",
+    "secondary": "Esc",
+    "role": "custom"
+  },
   "MS_SLOW": {
     "primary": "Slwr",
     "role": "custom"

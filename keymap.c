@@ -13,6 +13,9 @@ enum layers {
   ACC,
   MEDIA,
   MOUSE,
+  LOL,
+  LOL_SMARTCAST,
+  LOL_CHAT,
 };
 
 // ML_SAFE_RANGE, not SAFE_RANGE: the Voyager itself claims the first two slots
@@ -25,6 +28,9 @@ enum custom_keycodes {
   MOUSE_SPD_DEC,
   MOUSE_SPD_RST,
   MOUSE_SPD_INC,
+  CHAT_ENTER,
+  CHAT_SEND,
+  CHAT_CANCEL,
   // Portuguese accents via macOS dead keys.
   PT_AACU,  // á
   PT_AGRV,  // à
@@ -42,6 +48,10 @@ enum custom_keycodes {
 
 uint16_t SELECT_WORD_KEYCODE = SELWORD;
 uint16_t SELECT_LINE_KEYCODE = SELLINE;
+
+enum tap_dance_codes {
+  LOL_TOGGLE_DANCE,
+};
 
 extern uint8_t mk_max_speed;
 extern uint8_t mk_wheel_max_speed;
@@ -111,9 +121,14 @@ static bool mouse_wheel_boosted;
 // hand is still an opposite-hand reach, and Media stays a two-left-thumb chord.
 #define LT_NAV LT(NAV, KC_ENT)
 #define LT_NUM LT(NUM, KC_TAB)
-#define LT_SYM LT(SYM, KC_BSPC)
-#define LT_ACC LT(ACC, KC_SPC)
+#define LT_SYM LT(SYM, KC_SPC)
+#define LT_ACC LT(ACC, KC_BSPC)
 #define LT_MOUSE LT(MOUSE, KC_ESC)
+
+// The unused bottom-right key is a deliberate, isolated exception to the
+// no-tap-dance rule: two taps toggle the full LoL stack without a layer switcher.
+#define LOL_TOGGLE TD(LOL_TOGGLE_DANCE)
+#define LOL_SMARTCAST_HOLD MO(LOL_SMARTCAST)
 
 // Persistent, bounded speed steps. Slwr and Fstr move one level, while Norm
 // restores the config.h baseline. The two faster levels favor pointer speed so
@@ -144,8 +159,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     WISPR,          KC_1,           KC_2,           KC_3,           KC_4,           KC_NO,                                      KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,
     KC_HYPR,        KC_Q,           KC_W,           KC_E,           KC_R,           KC_T,                                           KC_Y,           KC_U,           KC_I,           KC_O,           KC_P,           KC_BSLS,
     CLAVIER,        HM_A,           HM_S,           HM_D,           HM_F,           KC_G,                                           HM_H,           HM_J,           HM_K,           HM_L,           KC_SCLN,        KC_QUOT,
-    LT_MOUSE,       KC_Z,           KC_X,           KC_C,           KC_V,           KC_B,                                           KC_N,           KC_M,           KC_COMM,        KC_DOT,         KC_SLSH,        KC_NO,
-                                                                    LT_NAV,         LT_NUM,                                         LT_SYM,         LT_ACC
+    LT_MOUSE,       KC_Z,           KC_X,           KC_C,           KC_V,           KC_B,                                           KC_N,           KC_M,           KC_COMM,        KC_DOT,         KC_SLSH,        LOL_TOGGLE,
+                                                                    LT_NAV,         LT_NUM,                                         LT_ACC,         LT_SYM
   ),
 
   [NAV] = LAYOUT_voyager(
@@ -213,6 +228,48 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_TRNS,        KC_MS_WH_LEFT,  KC_MS_BTN3,     KC_MS_WH_RIGHT, KC_TRNS,        KC_TRNS,                                        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_NO,
                                                                     KC_MS_BTN1,     KC_MS_BTN2,                                     KC_TRNS,        KC_TRNS
   ),
+
+  // This is a persistent game layer. It intentionally masks the productivity
+  // layout so a double tap is sufficient to enter and leave the game context.
+  [LOL] = LAYOUT_voyager(
+    KC_ESC,         KC_1,           KC_2,           KC_3,           KC_4,           KC_5,                                           KC_6,           KC_7,           KC_8,           KC_9,           KC_NO,          KC_NO,
+    KC_TAB,         KC_Q,           KC_W,           KC_E,           KC_R,           KC_6,                                           KC_Y,           KC_U,           KC_T,           KC_NO,          KC_NO,          KC_NO,
+    KC_LSFT,        KC_A,           KC_S,           KC_D,           KC_F,           KC_G,                                           KC_H,           KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,
+    LOL_SMARTCAST_HOLD,KC_Z,        KC_NO,          CHAT_ENTER,     KC_V,           KC_B,                                           KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,          LOL_TOGGLE,
+                                                                    KC_SPC,         KC_LCTL,                                        KC_P,           KC_NO
+  ),
+
+  [LOL_SMARTCAST] = LAYOUT_voyager(
+    KC_TRNS,        LALT(KC_1),     LALT(KC_2),     LALT(KC_3),     LALT(KC_4),     KC_TRNS,                                        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,
+    KC_TRNS,        LALT(KC_Q),     LALT(KC_W),     LALT(KC_E),     LALT(KC_R),     KC_TRNS,                                        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,
+    KC_TRNS,        KC_TRNS,        KC_TRNS,        LALT(KC_D),     LALT(KC_F),     KC_TRNS,                                        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,
+    KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_P,                                           KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,
+                                                                    KC_TRNS,        KC_TRNS,                                        KC_TRNS,        KC_TRNS
+  ),
+
+  [LOL_CHAT] = LAYOUT_voyager(
+    CHAT_CANCEL,    KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,                                        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,
+    KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,                                        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,
+    KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,                                        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,
+    KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,                                        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,
+                                                                    CHAT_SEND,      KC_TRNS,                                        KC_BSPC,        KC_TRNS
+  ),
+};
+
+static void lol_toggle_finished(tap_dance_state_t *state, void *user_data) {
+  if (state->count != 2) { return; }
+
+  if (layer_state_is(LOL)) {
+    // A toggle while chat is open must leave no game layer behind.
+    layer_off(LOL_CHAT);
+    layer_off(LOL);
+  } else {
+    layer_on(LOL);
+  }
+}
+
+tap_dance_action_t tap_dance_actions[] = {
+  [LOL_TOGGLE_DANCE] = ACTION_TAP_DANCE_FN(lol_toggle_finished),
 };
 
 // Accents are typed as a macOS dead key followed by the letter. Mods are
@@ -325,6 +382,27 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     case MOUSE_SPD_INC:
       if (record->event.pressed && mouse_speed_level < MOUSE_SPEED_LEVEL_COUNT - 1) {
         save_mouse_speed(mouse_speed_level + 1);
+      }
+      return false;
+
+    case CHAT_ENTER:
+      if (record->event.pressed) {
+        tap_code(KC_ENT);
+        layer_on(LOL_CHAT);
+      }
+      return false;
+
+    case CHAT_SEND:
+      if (record->event.pressed) {
+        tap_code(KC_ENT);
+        layer_off(LOL_CHAT);
+      }
+      return false;
+
+    case CHAT_CANCEL:
+      if (record->event.pressed) {
+        tap_code(KC_ESC);
+        layer_off(LOL_CHAT);
       }
       return false;
 
@@ -501,7 +579,10 @@ bool rgb_matrix_indicators_user(void) {
     case SYM:   light_layer(SYM,    85, LAYER_SAT, LAYER_VAL); break;
     case ACC:   light_layer(ACC,   230, LAYER_SAT, LAYER_VAL); break;
     case MEDIA: light_layer(MEDIA, 170, LAYER_SAT, LAYER_VAL); break;
-    case MOUSE: light_layer(MOUSE,   0, LAYER_SAT, LAYER_VAL); break;
+    case MOUSE:         light_layer(MOUSE,         0, LAYER_SAT, LAYER_VAL); break;
+    case LOL:           light_layer(LOL,         243, LAYER_SAT, LAYER_VAL); break;
+    case LOL_SMARTCAST: light_layer(LOL_SMARTCAST,250, LAYER_SAT, LAYER_VAL); break;
+    case LOL_CHAT:      light_layer(LOL_CHAT,    230, LAYER_SAT, LAYER_VAL); break;
   }
 
   return true;

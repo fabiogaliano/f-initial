@@ -4,8 +4,9 @@ ORYX_ENABLE = yes
 RGB_MATRIX_CUSTOM_KB = yes
 SPACE_CADET_ENABLE = no
 
-# Dropped in the 7-layer redesign: no tap dances, no layer lock (REDESIGN §9).
-TAP_DANCE_ENABLE = no
+# One isolated tap dance toggles the archived LoL layer from the empty
+# bottom-right key. Layer lock remains disabled.
+TAP_DANCE_ENABLE = yes
 LAYER_LOCK_ENABLE = no
 
 AUTOCORRECT_ENABLE = yes
