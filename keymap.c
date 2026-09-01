@@ -173,9 +173,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
   [NUM] = LAYOUT_voyager(
     KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,                                          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,
-    KC_NO,          KC_PLUS,        KC_MINS,        KC_ASTR,        KC_SLSH,        KC_EQL,                                         KC_7,           KC_8,           KC_9,           KC_EQL,         KC_TRNS,        KC_NO,
-    KC_NO,          KC_LGUI,        KC_LALT,        KC_LSFT,        KC_LCTL,        KC_TRNS,                                        KC_4,           KC_5,           KC_6,           KC_ENT,         KC_TRNS,        KC_NO,
-    KC_NO,          KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,        KC_TRNS,                                        KC_1,           KC_2,           KC_3,           KC_DOT,         KC_TRNS,        KC_NO,
+    KC_NO,          KC_PLUS,        KC_MINS,        KC_ASTR,        KC_SLSH,        KC_EQL,                                         KC_7,           KC_8,           KC_9,           KC_EQL,         KC_NO,          KC_NO,
+    KC_NO,          KC_LGUI,        KC_LALT,        KC_LSFT,        KC_LCTL,        KC_NO,                                          KC_4,           KC_5,           KC_6,           KC_NO,          KC_NO,          KC_NO,
+    KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,                                          KC_1,           KC_2,           KC_3,           KC_DOT,         KC_NO,          KC_NO,
                                                                     KC_TRNS,        KC_TRNS,                                        KC_BSPC,        KC_0
   ),
 
@@ -507,6 +507,25 @@ uint16_t achordion_streak_chord_timeout(uint16_t tap_hold_keycode,
   if (IS_QK_MOD_TAP(tap_hold_keycode)) {
     const uint8_t mods = QK_MOD_TAP_GET_MODS(tap_hold_keycode) & 0x0F;
     if (mods & (MOD_LGUI | MOD_LCTL)) { return 0; }
+
+    // Shift is additionally exempt in front of the base layer's punctuation
+    // keys, because the streak rule guards against a stray *capital* and none
+    // of these can produce one. "why?" typed at speed came out "whyd/": the y
+    // held the streak open, so HM_D resolved as a tap and the shift never
+    // reached the slash. Same story for : " |.
+    //
+    // KC_COMM and KC_DOT are left protected. They end a word too, but "d," and
+    // "d." are frequent enough that suppressing them would trade a rare lost ?
+    // for a regular stray < or >.
+    if (mods & MOD_LSFT) {
+      switch (next_keycode) {
+        case KC_SLSH:
+        case KC_SCLN:
+        case KC_QUOT:
+        case KC_BSLS:
+          return 0;
+      }
+    }
   }
 
   return achordion_streak_timeout(tap_hold_keycode);
