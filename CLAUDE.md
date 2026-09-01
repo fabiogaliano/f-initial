@@ -23,15 +23,18 @@ make voyager:f.qwerty:flash     # compile + flash
 
 ## Keymap: f.qwerty
 
-7 layers, but Mouse has no activation key. `REDESIGN.md` is the design document and the reason behind every
-placement; read it before moving keys. Its §7 design rules and §9 rejected list
-apply to any change.
+10 layers: Base through Mouse are the daily layout; LoL, LoL smartcast, and LoL
+chat are a persistent game stack. Double-tap the Base layer's bottom-right key to
+toggle LoL; the same key exits it. `REDESIGN.md` is the design document and the
+reason behind every placement; read it before moving keys. Its §7 design rules and
+§9 rejected list apply to any change.
 
 ### Key patterns
 - Home row mods: left `A`/`S`/`D`/`F` = Cmd/Opt/Shift/Ctrl, right `H`/`J`/`K`/`L` =
   Ctrl/Shift/Opt/Cmd.
-- Every layer is a momentary thumb hold; Media is a tri-layer of the two left
-  thumbs. There are no toggles.
+- Daily layers are momentary thumb holds; Media is a tri-layer of the two left
+  thumbs. The sole toggle is the isolated double-tap entry to the persistent LoL
+  game stack.
 - The thumb layers stay on fixed hands, but their tapped letters were swapped back
   to the pre-redesign positions: `LT(NAV, KC_ENT)`, `LT(NUM, KC_TAB)`,
   `LT(SYM, KC_BSPC)`, `LT(ACC, KC_SPC)`. Moving a layer to the other hand would

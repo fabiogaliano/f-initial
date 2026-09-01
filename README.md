@@ -55,6 +55,7 @@ interface.
 | 4 | Accents | hold right outer thumb (`Space`) |
 | 5 | Media | hold both left thumbs (tri-layer) |
 | 6 | Mouse | hold left outer row 3 (`Escape`) |
+| 7 | League of Legends | double-tap bottom-right key (`LoL`) to toggle |
 
 Mouse wheel taps send one native HID step immediately. Holding a wheel key
 repeats after 100 ms, ramps over roughly three seconds, and gets one bounded
@@ -72,7 +73,7 @@ second; the faster levels favor pointer speed so scrolling changes less.
 - `rgb_matrix_user.inc` — registers the PaletteFx effects
 - `autocorrect_dict.txt` / `autocorrect_data.h` — autocorrect dictionary
 - `probe-labels.json` — Probe HUD labels for our macros and `#define` aliases
-- `archive/league.md` — the removed League of Legends layers
+- `archive/league.md` — historical source for the restored League of Legends layers
 
 ## Regenerating autocorrect data
 

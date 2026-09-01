@@ -1,8 +1,9 @@
-# Archived — League of Legends layers
+# League of Legends layers — history
 
-Removed from `keymap.c` in the 7-layer redesign (REDESIGN.md §9). Kept here so
-they can be restored. Original layer numbers: 7 (layer switcher), 9 (LoL base),
-10 (LoL alt/smartcast), 11 (LoL chat).
+Removed from `keymap.c` in the 7-layer redesign (REDESIGN.md §9), then restored
+as the temporary LoL stack in the current keymap. This file preserves the original
+Oryx version: layer 7 (layer switcher), 9 (LoL base), 10 (LoL alt/smartcast), and
+11 (LoL chat).
 
 Full original file: `git show 6d06790:keymap.c`.
 
@@ -86,9 +87,10 @@ enum custom_keycodes {
       return false;
 ```
 
-## To restore
+## Current adaptation
 
-The redesign uses layers 0–6, so these can come back as 7–10 unchanged apart
-from the `TO()`/`MO()`/`layer_move()` numbers. They also need `TAP_DANCE_ENABLE`
-back in `rules.mk` if `DANCE_0` is used as the entry point; a plain `TO()` key on
-the Media layer is simpler.
+The current keymap assigns `LOL`, `LOL_SMARTCAST`, and `LOL_CHAT` to layers 7–9.
+`LOL_TOGGLE` on the bottom-right key uses a double-tap toggle, replacing the old
+layer switcher and its `TO(9)` entry. Smartcast is `MO(LOL_SMARTCAST)`. Chat uses
+`layer_on(LOL_CHAT)` and `layer_off(LOL_CHAT)` rather than `layer_move()`, which
+preserves the toggled LoL layer when chat opens and closes.

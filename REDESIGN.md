@@ -4,7 +4,9 @@ This document specifies the keymap for the ZSA Voyager and records why each
 decision was made. `keymap.c` now exists and is built, so **`keymap.c` is the
 source of truth**; this document is the rationale behind it.
 
-The keymap has 7 layers. All keys are assigned; Mouse remains deliberately unreachable.
+The daily layout has 7 layers. The archived League of Legends stack is temporarily
+restored as layers 7–9; double-tap the otherwise empty bottom-right key to toggle
+it. Mouse is reached by holding the left outer row-3 Escape key.
 
 Two things were amended when the firmware was written, both because ZSA's QMK
 fork is older than this plan assumed: see the note in section 5 (Achordion in
@@ -134,7 +136,7 @@ fight the typing hand.
 │ESC│ Z │ X │ C │ V │ B │         │ N │ M │ , │ . │ / │ × │
 └───┴───┴───┴───┴───┴───┘         └───┴───┴───┴───┴───┴───┘
               ┌───┬───┐               ┌───┬───┐
-              │SPC│TAB│               │BSP│ENT│
+              │ENT│TAB│               │SPC│BSP│
               └───┴───┘               └───┴───┘
    hold: Nav ─┘   └─ Num        Sym ─┘   └─ Accents
          Mouse ─┘  └── both = Media ──┘
@@ -289,7 +291,7 @@ The right hand holds a calculator numpad. The left hand holds the operators.
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
 │ × │ + │ − │ * │ / │ = │         │ 7 │ 8 │ 9 │ = │ — │ × │
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
-│ × │CMD│OPT│CTL│SFT│ — │         │ 4 │ 5 │ 6 │ENT│ — │ × │
+│ × │CMD│OPT│CTL│SFT│ — │         │ 4 │ 5 │ 6 │ × │ — │ × │
 ├───┼───┼───┼───┼───┼───┤         ├───┼───┼───┼───┼───┼───┤
 │ × │ — │ — │ — │ — │ — │         │ 1 │ 2 │ 3 │ . │ — │ × │
 └───┴───┴───┴───┴───┴───┘         └───┴───┴───┴───┴───┴───┘
@@ -298,10 +300,13 @@ The right hand holds a calculator numpad. The left hand holds the operators.
               └───┴───┘               └───┴───┘
 ```
 
-`0` is on the right OUTER thumb, in the `Enter` position. `Enter` is already on this
-layer at `L`, in the calculator position, so the thumb copy is not needed. This keeps
-`Backspace` live on the inner thumb, which matters most when you type digits.
-The position also reads like a real numpad, where `0` is the wide key below the digits.
+`0` is on the right OUTER thumb, in the `Enter` position. `Backspace` stays live on
+the inner thumb, which matters most when you type digits. The position also reads
+like a real numpad, where `0` is the wide key below the digits.
+
+The `L` position (pinky home) is dead. `Enter` was removed from it — the left inner
+thumb already taps `Enter` on Base, so a second copy added memory load for no reach
+benefit.
 
 Two `=` keys are intentional. `T` groups it with the operators. `O` puts it in the
 calculator position. The left key would otherwise be empty, and the pair lets you
@@ -743,8 +748,10 @@ Do not propose these again without a new reason.
 | romak Ç-extension | `ç` becomes a one-shot that gives `ã`, `õ` and the `-ão` / `-ões` word macros. High effort and very specific. Revisit only on request. |
 | Flow Tap | Reduces mod-tap misfires during fast rolls. Only add it if accidental mods appear after the flash. |
 
-**Old layers to archive.** Done. The League of Legends layers (old 9, 10, 11), the
-layer switcher (old 7) and the chat-flow keycodes are in `f.qwerty/archive/league.md`.
+**Old layers to archive.** The original League of Legends layers (old 9, 10, 11),
+layer switcher (old 7) and chat-flow keycodes remain documented in
+`f.qwerty/archive/league.md`. The LoL stack is temporarily restored as layers 7–9,
+with an isolated bottom-right double-tap toggle instead of the old switcher.
 
 **Keyboard Maestro cleanup.** The "Select a word" and "Select a line" macros are
 replaced by the firmware Select Word module. Delete them after the firmware works.
