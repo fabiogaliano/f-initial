@@ -52,7 +52,7 @@
 // Select Word targets macOS word/line hotkeys.
 #define SELECT_WORD_OS_MAC
 
-// PaletteFx is for looks only (REDESIGN §4). Its sources use the hsv_t/rgb_t
+// PaletteFx is for looks only (DESIGN.md, Lighting). Its sources use the hsv_t/rgb_t
 // type names QMK adopted after this fork.
 #define PALETTEFX_ENABLE_ALL_EFFECTS
 #define PALETTEFX_ENABLE_ALL_PALETTES

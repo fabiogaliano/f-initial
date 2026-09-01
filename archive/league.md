@@ -1,6 +1,6 @@
 # League of Legends layers — history
 
-Removed from `keymap.c` in the 7-layer redesign (REDESIGN.md §9), then restored
+Removed from `keymap.c` in the 7-layer redesign (DESIGN.md, Rejected), then restored
 as the temporary LoL stack in the current keymap. This file preserves the original
 Oryx version: layer 7 (layer switcher), 9 (LoL base), 10 (LoL alt/smartcast), and
 11 (LoL chat).

@@ -25,9 +25,9 @@ make voyager:f.qwerty:flash     # compile + flash
 
 10 layers: Base through Mouse are the daily layout; LoL, LoL smartcast, and LoL
 chat are a persistent game stack. Double-tap the Base layer's bottom-right key to
-toggle LoL; the same key exits it. `REDESIGN.md` is the design document and the
-reason behind every placement; read it before moving keys. Its §7 design rules and
-§9 rejected list apply to any change.
+toggle LoL; the same key exits it. `DESIGN.md` is the design document and the
+reason behind every placement; read it before moving keys. Its "Design rules" and
+"Rejected" sections apply to any change.
 
 ### Key patterns
 - Home row mods: left `A`/`S`/`D`/`F` = Cmd/Opt/Shift/Ctrl, right `H`/`J`/`K`/`L` =

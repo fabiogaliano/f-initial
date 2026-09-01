@@ -1,7 +1,7 @@
 # f.qwerty — ZSA Voyager Keymap
 
 Custom QMK keymap for the ZSA Voyager split keyboard.
-The design and its rationale live in `REDESIGN.md`.
+The design and its rationale live in `DESIGN.md`.
 
 ## Build & Flash
 
