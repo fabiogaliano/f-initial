@@ -499,14 +499,40 @@ uint16_t achordion_streak_chord_timeout(uint16_t tap_hold_keycode,
   // preceding letter kept the streak alive. Same for Cmd+C/S/Z/A and for the
   // Ctrl+A/E/K/W line-editing chords on HM_F and HM_H.
   //
-  // Cmd and Ctrl are therefore exempt: they are shortcut mods, almost never
-  // pressed by accident, and a lost one is far more disruptive than a stray
-  // one. Shift and Opt keep the streak protection, since their misfires are
-  // the ones that silently corrupt text (a stray capital, a stray accented
-  // character) and they are rarely wanted mid-streak.
+  // Cmd and Ctrl are therefore exempt, but only in front of the chords that
+  // are actually used mid-flow. A blanket exemption let every pinky linger
+  // through: "an" is the most frequent bigram after a, and each lingering one
+  // fired Cmd+N. Likewise "at" Cmd+T, "ar" Cmd+R, "a " Cmd+Space. Any chord
+  // not listed here only needs a pause after the last letter.
   if (IS_QK_MOD_TAP(tap_hold_keycode)) {
     const uint8_t mods = QK_MOD_TAP_GET_MODS(tap_hold_keycode) & 0x0F;
-    if (mods & (MOD_LGUI | MOD_LCTL)) { return 0; }
+    // Cmd+A, Cmd+S, Ctrl+A and Ctrl+K land on home row mod-taps.
+    const uint16_t next = IS_QK_MOD_TAP(next_keycode)
+                              ? QK_MOD_TAP_GET_TAP_KEYCODE(next_keycode)
+                              : next_keycode;
+
+    if (mods & MOD_LGUI) {
+      switch (next) {
+        case KC_Z:
+        case KC_X:
+        case KC_C:
+        case KC_V:
+        case KC_S:
+        case KC_A:
+          return 0;
+      }
+    }
+
+    // Line editing, the chords this exemption was carved out for.
+    if (mods & MOD_LCTL) {
+      switch (next) {
+        case KC_A:
+        case KC_E:
+        case KC_K:
+        case KC_W:
+          return 0;
+      }
+    }
 
     // Shift is additionally exempt in front of the base layer's punctuation
     // keys, because the streak rule guards against a stray *capital* and none

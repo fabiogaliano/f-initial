@@ -313,8 +313,15 @@ come from, and allowed when you pause to reach for a chord deliberately.
 Two exemptions have been carved out of the streak rule, both because a *lost* mod
 costs more than a stray one:
 
-- **Cmd and Ctrl entirely.** They are shortcut mods, almost never pressed by
-  accident. `Cmd+V` typed mid-sentence was resolving as the letters `av`.
+- **Cmd and Ctrl, for the chords used mid-flow.** `Cmd+V` typed mid-sentence was
+  resolving as the letters `av`. Only `Cmd+Z`/`X`/`C`/`V`/`S`/`A` and
+  `Ctrl+A`/`E`/`K`/`W` are exempt.
+
+  *Amended.* The exemption originally covered every Cmd and Ctrl chord. That let
+  pinky lingers in ordinary words fire app shortcuts: `an` (the most frequent
+  bigram after `a` in the user's own typing) gave `Cmd+N`, and `at`, `ar`, `a `
+  gave `Cmd+T`, `Cmd+R` and `Cmd+Space`. Any other chord now needs only a brief
+  pause after the last letter.
 - **Shift in front of `/` `;` `'` `\`.** The streak rule exists to stop a stray
   capital mid-word, and punctuation cannot produce one. `why?` typed at speed came
   out `whyd/`. Comma and dot stay protected: `d,` and `d.` are frequent enough that
